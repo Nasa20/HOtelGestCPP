@@ -29,6 +29,25 @@ public:
         }
     }
 
+    // NEW: Validates that the integer is within a specific range (Min/Max)
+    static int getInt(const string& prompt, int min, int max) {
+        int value;
+        while (true) {
+            // Reuse the basic integer check
+            value = getInt(prompt);
+            
+            if (value >= min && value <= max) {
+                return value;
+            }
+            
+            // Advanced Feedback: Explain exactly what is wrong
+            cout << ErrorHandler::YELLOW 
+                 << "   ➜ Option invalide. Veuillez choisir une option entre " 
+                 << min << " et " << max << "." 
+                 << ErrorHandler::RESET << endl;
+        }
+    }
+
     // Forces the user to enter a valid double
     static double getDouble(const string& prompt) {
         double value;

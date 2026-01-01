@@ -5,6 +5,8 @@
 #include <memory>
 #include <string>
 #include <sqlite3.h> // SQLITE
+#include <map>       // NEW: For tracking attempts
+#include <chrono>    // NEW: For timestamps
 #include "User.h"
 #include "Admin.h"
 #include "Employe.h"
@@ -18,6 +20,19 @@ private:
     shared_ptr<User> utilisateurConnecte;
     int prochainId;
     sqlite3* db; // Pointeur DB
+
+    // === RATE LIMITING (SECURITY) ===
+    struct LoginState {
+        int attempts = 0;
+        chrono::steady_clock::time_point lockoutEnd;
+    };
+    
+    // Tracks attempts by username
+    map<string, LoginState> loginTracker;
+    
+    const int MAX_ATTEMPTS = 3;
+    const int LOCKOUT_SECONDS = 30;
+    // ================================
 
     static string getDataPath() {
         #ifdef DATA_DIR

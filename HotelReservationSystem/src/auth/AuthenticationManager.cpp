@@ -1,4 +1,4 @@
-#include "AuthenticationManager.h"
+#include "../../include/auth/AuthenticationManager.h"
 #include <iostream>
 
 AuthenticationManager::AuthenticationManager() : prochainId(1), db(nullptr) {
@@ -80,18 +80,60 @@ void AuthenticationManager::creerAdminParDefaut() {
     }
 }
 
-// Login
+// ================= SECURE LOGIN LOGIC =================
+
 shared_ptr<User> AuthenticationManager::login(const string& username, const string& password) {
-    for (auto& user : utilisateurs) {
-        if (user->getUsername() == username && user->estActif()) {
-            if (user->verifierMotDePasse(password)) {
-                utilisateurConnecte = user;
-                return user;
-            } else throw AuthenticationException("Mot de passe incorrect");
+    // 1. Check Rate Limit / Lockout
+    auto& state = loginTracker[username]; // Get (or create default) state for this username
+
+    if (state.attempts >= MAX_ATTEMPTS) {
+        auto now = chrono::steady_clock::now();
+        if (now < state.lockoutEnd) {
+            auto remaining = chrono::duration_cast<chrono::seconds>(state.lockoutEnd - now).count();
+            throw AuthenticationException("🛑 Compte temporairement bloqué. Réessayez dans " + to_string(remaining) + " secondes.");
+        } else {
+            // Lockout expired, reset attempts
+            state.attempts = 0;
         }
     }
+
+    // 2. Search and Verify
+    for (auto& user : utilisateurs) {
+        if (user->getUsername() == username) {
+            
+            if (!user->estActif()) {
+                throw AuthenticationException("Ce compte a été désactivé par un administrateur.");
+            }
+
+            if (user->verifierMotDePasse(password)) {
+                // SUCCESS
+                state.attempts = 0; // Reset counter on success
+                // Optionally remove from tracker to save memory: loginTracker.erase(username);
+                
+                utilisateurConnecte = user;
+                return user;
+            } else {
+                // FAILURE (Wrong Password)
+                state.attempts++;
+                int retriesLeft = MAX_ATTEMPTS - state.attempts;
+                
+                if (state.attempts >= MAX_ATTEMPTS) {
+                    state.lockoutEnd = chrono::steady_clock::now() + chrono::seconds(LOCKOUT_SECONDS);
+                    throw AuthenticationException("⛔ Trop d'échecs. Compte verrouillé pour " + to_string(LOCKOUT_SECONDS) + "s.");
+                }
+                
+                throw AuthenticationException("Mot de passe incorrect. (Essais restants: " + to_string(retriesLeft) + ")");
+            }
+        }
+    }
+    
+    // User not found
+    // Note: In a highly secure system, you might not want to reveal "User not found" vs "Wrong password"
+    // to prevent username enumeration, but for this project scope, "Utilisateur introuvable" is fine.
     throw AuthenticationException("Utilisateur introuvable");
 }
+
+// ======================================================
 
 void AuthenticationManager::logout() { utilisateurConnecte = nullptr; }
 bool AuthenticationManager::estConnecte() const { return utilisateurConnecte != nullptr; }

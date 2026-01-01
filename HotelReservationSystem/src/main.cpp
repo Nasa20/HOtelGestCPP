@@ -44,7 +44,6 @@ void menuGestionChambres(Hotel& hotel, shared_ptr<User> user);
 void menuGestionReservations(Hotel& hotel, shared_ptr<User> user);
 void menuRechercheDisponibilites(Hotel& hotel, shared_ptr<User> user);
 void menuGestionUtilisateurs(AuthenticationManager& authManager, shared_ptr<User> user);
-void menuProfil(shared_ptr<User> user, AuthenticationManager& authManager);
 
 // Interfaces
 void ajouterClientInterface(Hotel& hotel);
@@ -137,7 +136,7 @@ void clearConsole() {
 
 void afficherBanniere() {
     cout << "╔════════════════════════════════════════════════╗" << endl;
-    cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v2.5 (Smart) ║" << endl;
+    cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v2.6 (Pro)    ║" << endl;
     cout << "║        Hôtel Le Grand Palace                  ║" << endl;
     cout << "╚════════════════════════════════════════════════╝" << endl;
 }
@@ -150,8 +149,10 @@ shared_ptr<User> ecranConnexion(AuthenticationManager& authManager) {
         cout << "Username (ou 'q' pour quitter): "; 
         getline(cin, username);
         if (username == "q") return nullptr;
+        
         cout << "Mot de passe: "; 
         getline(cin, password);
+        
         try {
             return authManager.login(username, password);
         } catch (const AuthenticationException& e) {
@@ -172,7 +173,7 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
         cout << "[6] 👨‍💼 Personnel" << endl;
         cout << "[0] 🚪 Quitter" << endl;
         
-        choix = InputValidator::getInt("Choix: ");
+        choix = InputValidator::getInt("Choix: ", 0, 6);
         clearConsole();
 
         try {
@@ -184,7 +185,6 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
                 case 5: if (user->peutVoirStatistiques()) hotel.afficherStatistiques(); break;
                 case 6: if (user->peutGererUtilisateurs()) menuGestionUtilisateurs(authManager, user); break;
                 case 0: break;
-                default: cout << ErrorHandler::YELLOW << "Option invalide." << ErrorHandler::RESET << endl;
             }
         } catch (const HotelException& e) { ErrorHandler::handle(e); }
         
@@ -196,22 +196,23 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
 
 void menuGestionClients(Hotel& hotel, shared_ptr<User> user) {
     cout << "=== GESTION CLIENTS ===" << endl;
-    cout << "[1] Ajouter  [2] Rechercher (Smart)  [3] Modifier  [4] Supprimer  [5] Lister" << endl;
-    int choix = InputValidator::getInt("Choix: ");
+    cout << "[1] Ajouter  [2] Rechercher (Smart)  [3] Modifier  [4] Supprimer  [5] Lister  [0] Retour" << endl;
+    
+    // UPDATE: Valid options [0-5]
+    int choix = InputValidator::getInt("Choix: ", 0, 5);
     
     switch(choix) {
         case 1: ajouterClientInterface(hotel); break;
-        case 2: rechercherClientInterface(hotel); break; // <--- Uses Smart Search
+        case 2: rechercherClientInterface(hotel); break;
         case 3: modifierClientInterface(hotel); break;
         case 4: supprimerClientInterface(hotel); break;
         case 5: hotel.listerClients(); break;
+        case 0: break; // Return to main menu
     }
 }
 
 void rechercherClientInterface(Hotel& hotel) {
-    // SMART SEARCH INTERFACE
     string keyword = InputValidator::getString("🔍 Rechercher (Nom, Prénom, Email ou ID): ");
-    
     auto resultats = hotel.rechercherClientsSmart(keyword);
     
     if (resultats.empty()) {
@@ -253,22 +254,23 @@ void supprimerClientInterface(Hotel& hotel) {
 
 void menuGestionChambres(Hotel& hotel, shared_ptr<User> user) {
     cout << "=== GESTION CHAMBRES ===" << endl;
-    cout << "[1] Ajouter  [2] Rechercher (Smart)  [3] Modifier  [4] Supprimer  [5] Lister" << endl;
-    int choix = InputValidator::getInt("Choix: ");
+    cout << "[1] Ajouter  [2] Rechercher (Smart)  [3] Modifier  [4] Supprimer  [5] Lister  [0] Retour" << endl;
+    
+    // UPDATE: Valid options [0-5]
+    int choix = InputValidator::getInt("Choix: ", 0, 5);
 
     switch(choix) {
         case 1: ajouterChambreInterface(hotel); break;
-        case 2: rechercherChambreInterface(hotel); break; // <--- Uses Smart Search
+        case 2: rechercherChambreInterface(hotel); break;
         case 3: modifierChambreInterface(hotel); break;
         case 4: supprimerChambreInterface(hotel); break;
         case 5: hotel.listerChambres(); break;
+        case 0: break; // Return
     }
 }
 
 void rechercherChambreInterface(Hotel& hotel) {
-    // SMART SEARCH INTERFACE
     string keyword = InputValidator::getString("🔍 Rechercher (Numéro, Type ou 'libre'): ");
-    
     auto resultats = hotel.rechercherChambresSmart(keyword);
     
     if (resultats.empty()) {
@@ -283,7 +285,8 @@ void rechercherChambreInterface(Hotel& hotel) {
 
 void ajouterChambreInterface(Hotel& hotel) {
     cout << "[1] Simple [2] Double [3] Suite\n";
-    int t = InputValidator::getInt("Type: ");
+    int t = InputValidator::getInt("Type: ", 1, 3);
+    
     int n = InputValidator::getInt("Numero: ");
     double p = InputValidator::getDouble("Prix: ");
     int s = InputValidator::getInt("Superficie: ");
@@ -318,12 +321,16 @@ void supprimerChambreInterface(Hotel& hotel) {
 
 void menuGestionReservations(Hotel& h, shared_ptr<User> u) {
     cout << "=== GESTION RESERVATIONS ===" << endl;
-    cout << "[1] Créer [2] Consulter [3] Annuler [4] Lister\n";
-    int c = InputValidator::getInt("Choix: ");
+    cout << "[1] Créer [2] Consulter [3] Annuler [4] Lister  [0] Retour\n";
+    
+    // UPDATE: Valid options [0-4]
+    int c = InputValidator::getInt("Choix: ", 0, 4);
+    
     if(c==1) creerReservationInterface(h);
     else if(c==2) consulterReservationInterface(h);
     else if(c==3) annulerReservationInterface(h);
     else if(c==4) h.listerReservations();
+    // 0 automatically falls through and returns
 }
 
 void creerReservationInterface(Hotel& h) {
@@ -354,10 +361,14 @@ void annulerReservationInterface(Hotel& h) {
 
 void menuRechercheDisponibilites(Hotel& h, shared_ptr<User> u) {
     cout << "=== DISPONIBILITÉS ===" << endl;
-    cout << "[1] Voir Chambres Dispo  [2] Calculer Coût\n";
-    int c = InputValidator::getInt("Choix: ");
+    cout << "[1] Voir Chambres Dispo  [2] Calculer Coût  [0] Retour\n";
+    
+    // UPDATE: Valid options [0-2]
+    int c = InputValidator::getInt("Choix: ", 0, 2);
+    
     if(c==1) chambresDisponiblesInterface(h);
     else if(c==2) calculerCoutSejourInterface(h);
+    // 0 falls through
 }
 
 void chambresDisponiblesInterface(Hotel& h) {
@@ -381,11 +392,15 @@ void calculerCoutSejourInterface(Hotel& h) {
 
 void menuGestionUtilisateurs(AuthenticationManager& am, shared_ptr<User> u) {
     cout << "=== GESTION STAFF ===" << endl;
-    cout << "[1] Créer Admin [2] Créer Employé [3] Lister\n";
-    int c = InputValidator::getInt("Choix: ");
+    cout << "[1] Créer Admin [2] Créer Employé [3] Lister  [0] Retour\n";
+    
+    // UPDATE: Valid options [0-3]
+    int c = InputValidator::getInt("Choix: ", 0, 3);
+    
     if(c==1) creerAdminInterface(am, u);
     else if(c==2) creerEmployeInterface(am, u);
     else if(c==3) listerUtilisateursInterface(am, u);
+    // 0 falls through
 }
 
 void creerAdminInterface(AuthenticationManager& am, shared_ptr<User> u) {
