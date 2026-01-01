@@ -3,38 +3,40 @@
 #include <memory>
 #include <iomanip>
 
-// === FIX FOR WINDOWS CONSOLE ENCODING ===
+// Windows Encoding Fix
 #ifdef _WIN32
 #include <windows.h>
 #endif
-// ========================================
 
-// Core
-#include "Date.h"
-#include "Client.h"
-#include "HotelException.h"
-#include "Chambre.h"
-#include "ChambreSimple.h"
-#include "ChambreDouble.h"
-#include "Suite.h"
-#include "Reservation.h"
-#include "Hotel.h"
+// Core Includes
+#include "../include/core/Date.h"
+#include "../include/core/Client.h"
+#include "../include/core/HotelException.h"
+#include "../include/core/Chambre.h"
+#include "../include/core/ChambreSimple.h"
+#include "../include/core/ChambreDouble.h"
+#include "../include/core/Suite.h"
+#include "../include/core/Reservation.h"
+#include "../include/core/Hotel.h"
 
-// Auth
-#include "User.h"
-#include "Admin.h"
-#include "Employe.h"
-#include "AuthenticationManager.h"
+// Auth Includes
+#include "../include/auth/User.h"
+#include "../include/auth/Admin.h"
+#include "../include/auth/Employe.h"
+#include "../include/auth/AuthenticationManager.h"
+
+// Utils Includes
+#include "../include/utils/ErrorHandler.h"
+#include "../include/utils/InputValidator.h"
 
 using namespace std;
 
 // ==================== PROTOTYPES ====================
-void setupConsole(); // <--- Prototype for the fix
+void setupConsole();
 void pauseConsole();
 void clearConsole();
 void afficherBanniere();
 shared_ptr<User> ecranConnexion(AuthenticationManager& authManager);
-void afficherMenuPrincipal(shared_ptr<User> user);
 void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<User> user);
 
 void menuGestionClients(Hotel& hotel, shared_ptr<User> user);
@@ -44,6 +46,7 @@ void menuRechercheDisponibilites(Hotel& hotel, shared_ptr<User> user);
 void menuGestionUtilisateurs(AuthenticationManager& authManager, shared_ptr<User> user);
 void menuProfil(shared_ptr<User> user, AuthenticationManager& authManager);
 
+// Interfaces
 void ajouterClientInterface(Hotel& hotel);
 void rechercherClientInterface(Hotel& hotel);
 void modifierClientInterface(Hotel& hotel);
@@ -65,40 +68,33 @@ void creerAdminInterface(AuthenticationManager& authManager, shared_ptr<User> us
 void creerEmployeInterface(AuthenticationManager& authManager, shared_ptr<User> user);
 void listerUtilisateursInterface(AuthenticationManager& authManager, shared_ptr<User> user);
 
-// ==================== CONSOLE SETUP (FIX) ====================
 void setupConsole() {
     #ifdef _WIN32
-        // Force Standard Output to UTF-8
         SetConsoleOutputCP(65001); 
-        // Force Standard Input to UTF-8
         SetConsoleCP(65001);       
     #endif
 }
 
-// ==================== MAIN ====================
 int main() {
-    setupConsole(); // <--- APPLIES THE FIX IMMEDIATELY
+    setupConsole();
 
     try {
         Hotel hotel("Le Grand Palace", "Boulevard Mohammed V, Casablanca");
         AuthenticationManager authManager;
 
         afficherBanniere();
-
-        // Afficher le chemin du dossier data
-        #ifdef DATA_DIR
-            cout << "📁 Dossier de données: " << DATA_DIR << endl;
-        #else
-            cout << "📁 Dossier de données: data/" << endl;
-        #endif
-
         cout << "\n🔄 Connexion à la base de données..." << endl;
 
-        // Chargement des données (via SQL)
-        authManager.chargerUtilisateurs();
-        hotel.chargerDonnees();
+        // === STARTUP DATA LOADING ===
+        try {
+            authManager.chargerUtilisateurs();
+            hotel.seedData();       // <--- SEED DATA CALL
+            hotel.chargerDonnees(); // <--- LOAD DATA CALL
+        } catch (const HotelException& e) {
+            ErrorHandler::handle(e);
+        }
 
-        cout << "✅ Base de données chargée avec succès!" << endl;
+        cout << "✅ Système prêt!" << endl;
         cout << "   • Clients: " << hotel.getNombreClients() << endl;
         cout << "   • Chambres: " << hotel.getNombreChambres() << endl;
         cout << "   • Réservations: " << hotel.getNombreReservations() << endl;
@@ -110,38 +106,28 @@ int main() {
 
         while (true) {
             auto user = ecranConnexion(authManager);
-            if (!user) {
-                break;
-            }
+            if (!user) break;
 
             hotel.setUtilisateurCourant(user);
             menuPrincipal(hotel, authManager, user);
+            
             authManager.logout();
             clearConsole();
-            cout << "\n👋 Déconnexion réussie!\n" << endl;
-            pauseConsole();
-            clearConsole();
         }
-        
-        cout << "\n✅ Données sécurisées dans la base de données." << endl;
 
     } catch (const exception& e) {
-        cerr << "\n💥 ERREUR FATALE: " << e.what() << "\n" << endl;
+        ErrorHandler::handle(e);
         return 1;
     }
 
-    cout << "\n👋 Merci d'avoir utilisé le système. Au revoir!\n" << endl;
+    cout << "\n👋 Au revoir!\n" << endl;
     return 0;
 }
 
-// ==================== UTILITAIRES ====================
+// ==================== UTILS & UI ====================
 
-void pauseConsole() {
-    cout << "\nAppuyez sur Entrée...";
-    cin.get();
-}
-
-void clearConsole() {
+void pauseConsole() { cout << "\nAppuyez sur Entrée..."; cin.get(); }
+void clearConsole() { 
     #ifdef _WIN32
         system("cls");
     #else
@@ -151,90 +137,42 @@ void clearConsole() {
 
 void afficherBanniere() {
     cout << "╔════════════════════════════════════════════════╗" << endl;
-    cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v2.0 (SQL)   ║" << endl;
+    cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v2.5 (Smart) ║" << endl;
     cout << "║        Hôtel Le Grand Palace                  ║" << endl;
-    cout << "║          Casablanca, Maroc                    ║" << endl;
     cout << "╚════════════════════════════════════════════════╝" << endl;
-    cout << endl;
 }
 
-// ==================== AUTHENTIFICATION ====================
+// ==================== MENU LOGIC ====================
 
 shared_ptr<User> ecranConnexion(AuthenticationManager& authManager) {
     string username, password;
-    int tentatives = 0;
-
-    while (tentatives < 3) {
-        cout << "\n╔═══════════════════════════════════════╗" << endl;
-        cout << "║   🔐 CONNEXION PERSONNEL              ║" << endl;
-        cout << "╚═══════════════════════════════════════╝" << endl;
-        cout << endl;
-
-        cout << "Username (ou 'q' pour quitter): ";
+    while (true) {
+        cout << "Username (ou 'q' pour quitter): "; 
         getline(cin, username);
-
         if (username == "q") return nullptr;
-
-        cout << "Mot de passe: ";
+        cout << "Mot de passe: "; 
         getline(cin, password);
-
         try {
-            auto user = authManager.login(username, password);
-            clearConsole();
-            cout << "\n✅ Connexion réussie!" << endl;
-            cout << "Bienvenue " << user->getPrenom() << " " << user->getNom() << "\n" << endl;
-            pauseConsole();
-            clearConsole();
-            return user;
+            return authManager.login(username, password);
         } catch (const AuthenticationException& e) {
-            tentatives++;
-            cout << "\n❌ " << e.what() << endl;
-            cout << "Tentatives restantes: " << (3 - tentatives) << endl;
-            pauseConsole();
-            clearConsole();
+            ErrorHandler::handle(e);
         }
     }
-
-    cout << "\n❌ Trop de tentatives." << endl;
-    return nullptr;
-}
-
-// ==================== MENU PRINCIPAL ====================
-
-void afficherMenuPrincipal(shared_ptr<User> user) {
-    cout << "\n╔════════════════════════════════════════════════╗" << endl;
-    cout << "║        MENU PRINCIPAL - GESTION HÔTEL         ║" << endl;
-    cout << "╚════════════════════════════════════════════════╝" << endl;
-    cout << "\n👤 " << user->getPrenom() << " " << user->getNom();
-    cout << " (" << user->getRoleString() << ")\n" << endl;
-
-    cout << "┌─────────────────────────────────────────┐" << endl;
-    cout << "│  [1] 👥 Gestion des Clients            │" << endl;
-    cout << "│  [2] 🏠 Gestion des Chambres           │" << endl;
-    cout << "│  [3] 📋 Gestion des Réservations       │" << endl;
-    cout << "│  [4] 🔍 Recherche & Disponibilités     │" << endl;
-
-    if (user->peutVoirStatistiques()) {
-        cout << "│  [5] 📊 Statistiques                   │" << endl;
-    }
-
-    if (user->peutGererUtilisateurs()) {
-        cout << "│  [6] 👨‍💼 Gestion du Personnel          │" << endl;
-    }
-
-    cout << "│  [7] 👤 Mon Profil                      │" << endl;
-    cout << "│  [0] 🚪 Déconnexion                     │" << endl;
-    cout << "└─────────────────────────────────────────┘" << endl;
-    cout << "Choix: ";
 }
 
 void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<User> user) {
     int choix;
-
     do {
-        afficherMenuPrincipal(user);
-        cin >> choix;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "\n=== MENU PRINCIPAL ===" << endl;
+        cout << "[1] 👥 Clients" << endl;
+        cout << "[2] 🏠 Chambres" << endl;
+        cout << "[3] 📋 Réservations" << endl;
+        cout << "[4] 🔍 Disponibilités" << endl;
+        cout << "[5] 📊 Statistiques" << endl;
+        cout << "[6] 👨‍💼 Personnel" << endl;
+        cout << "[0] 🚪 Quitter" << endl;
+        
+        choix = InputValidator::getInt("Choix: ");
         clearConsole();
 
         try {
@@ -243,440 +181,235 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
                 case 2: menuGestionChambres(hotel, user); break;
                 case 3: menuGestionReservations(hotel, user); break;
                 case 4: menuRechercheDisponibilites(hotel, user); break;
-                case 5:
-                    if (user->peutVoirStatistiques()) {
-                        hotel.afficherStatistiques();
-                        pauseConsole();
-                        clearConsole();
-                    }
-                    break;
-                case 6:
-                    if (user->peutGererUtilisateurs()) {
-                        menuGestionUtilisateurs(authManager, user);
-                    }
-                    break;
-                case 7: menuProfil(user, authManager); break;
+                case 5: if (user->peutVoirStatistiques()) hotel.afficherStatistiques(); break;
+                case 6: if (user->peutGererUtilisateurs()) menuGestionUtilisateurs(authManager, user); break;
                 case 0: break;
-                default:
-                    cout << "❌ Choix invalide!" << endl;
-                    pauseConsole();
-                    clearConsole();
+                default: cout << ErrorHandler::YELLOW << "Option invalide." << ErrorHandler::RESET << endl;
             }
-        } catch (const HotelException& e) {
-            cout << "\n❌ ERREUR: " << e.what() << endl;
-            pauseConsole();
-            clearConsole();
-        }
+        } catch (const HotelException& e) { ErrorHandler::handle(e); }
+        
+        if(choix != 0) { pauseConsole(); clearConsole(); }
     } while(choix != 0);
 }
 
-// ==================== GESTION CLIENTS ====================
+// ==================== CLIENTS ====================
 
 void menuGestionClients(Hotel& hotel, shared_ptr<User> user) {
-    int choix;
-    do {
-        cout << "\n╔════════════════════════════════════════╗" << endl;
-        cout << "║       👥 GESTION DES CLIENTS          ║" << endl;
-        cout << "╚════════════════════════════════════════╝" << endl;
-        cout << "\n[1] Ajouter  [2] Rechercher  [3] Modifier" << endl;
-        cout << "[4] Supprimer  [5] Lister  [0] Retour" << endl;
-        cout << "Choix: ";
-        cin >> choix;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        clearConsole();
-
-        try {
-            switch(choix) {
-                case 1: ajouterClientInterface(hotel); break;
-                case 2: rechercherClientInterface(hotel); break;
-                case 3: modifierClientInterface(hotel); break;
-                case 4: supprimerClientInterface(hotel); break;
-                case 5:
-                    hotel.listerClients();
-                    pauseConsole();
-                    clearConsole();
-                    break;
-                case 0: break;
-                default: cout << "❌ Invalide!" << endl; pauseConsole(); clearConsole();
-            }
-        } catch (const HotelException& e) {
-            cout << "\n❌ " << e.what() << endl;
-            pauseConsole();
-            clearConsole();
-        }
-    } while(choix != 0);
-}
-
-void ajouterClientInterface(Hotel& hotel) {
-    string nom, prenom, email, tel;
-    cout << "=== NOUVEAU CLIENT ===" << endl;
-    cout << "Nom: "; getline(cin, nom);
-    cout << "Prénom: "; getline(cin, prenom);
-    cout << "Email: "; getline(cin, email);
-    cout << "Téléphone: "; getline(cin, tel);
-    hotel.ajouterClient(nom, prenom, email, tel);
-    cout << "\n✅ Client ajouté!" << endl;
-    pauseConsole();
-    clearConsole();
+    cout << "=== GESTION CLIENTS ===" << endl;
+    cout << "[1] Ajouter  [2] Rechercher (Smart)  [3] Modifier  [4] Supprimer  [5] Lister" << endl;
+    int choix = InputValidator::getInt("Choix: ");
+    
+    switch(choix) {
+        case 1: ajouterClientInterface(hotel); break;
+        case 2: rechercherClientInterface(hotel); break; // <--- Uses Smart Search
+        case 3: modifierClientInterface(hotel); break;
+        case 4: supprimerClientInterface(hotel); break;
+        case 5: hotel.listerClients(); break;
+    }
 }
 
 void rechercherClientInterface(Hotel& hotel) {
-    int id;
-    cout << "ID client: "; cin >> id;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    auto client = hotel.rechercherClient(id);
-    if (client) { cout << endl; client->afficher(); }
-    else cout << "\n❌ Introuvable!" << endl;
-    pauseConsole();
-    clearConsole();
+    // SMART SEARCH INTERFACE
+    string keyword = InputValidator::getString("🔍 Rechercher (Nom, Prénom, Email ou ID): ");
+    
+    auto resultats = hotel.rechercherClientsSmart(keyword);
+    
+    if (resultats.empty()) {
+        cout << ErrorHandler::YELLOW << "❌ Aucun client trouvé pour '" << keyword << "'" << ErrorHandler::RESET << endl;
+    } else {
+        cout << "\n✅ " << resultats.size() << " résultat(s) trouvé(s):\n" << endl;
+        for (const auto& client : resultats) {
+            cout << *client << endl;
+        }
+    }
+}
+
+void ajouterClientInterface(Hotel& hotel) {
+    string n = InputValidator::getString("Nom: ");
+    string p = InputValidator::getString("Prénom: ");
+    string e = InputValidator::getString("Email: ");
+    string t = InputValidator::getString("Tel: ");
+    hotel.ajouterClient(n, p, e, t);
+    cout << "✅ Ajouté." << endl;
 }
 
 void modifierClientInterface(Hotel& hotel) {
-    int id;
-    string email, tel;
-    cout << "ID client: "; cin >> id;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Nouvel email: "; getline(cin, email);
-    cout << "Nouveau tél: "; getline(cin, tel);
-    hotel.modifierClient(id, email, tel);
-    cout << "\n✅ Modifié!" << endl;
-    pauseConsole();
-    clearConsole();
+    int id = InputValidator::getInt("ID Client: ");
+    string e = InputValidator::getString("Nouvel Email: ");
+    string t = InputValidator::getString("Nouveau Tel: ");
+    hotel.modifierClient(id, e, t);
+    cout << "✅ Modifié." << endl;
 }
 
 void supprimerClientInterface(Hotel& hotel) {
-    int id;
-    char c;
-    cout << "ID client: "; cin >> id;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Confirmer (o/n)? "; cin >> c;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    if (c == 'o') {
+    int id = InputValidator::getInt("ID Client: ");
+    if(InputValidator::getConfirmation("Confirmer suppression ?")) {
         hotel.supprimerClient(id);
-        cout << "\n✅ Supprimé!" << endl;
+        cout << "✅ Supprimé." << endl;
     }
-    pauseConsole();
-    clearConsole();
 }
 
-// ==================== GESTION CHAMBRES ====================
+// ==================== CHAMBRES ====================
 
 void menuGestionChambres(Hotel& hotel, shared_ptr<User> user) {
-    int choix;
-    do {
-        cout << "\n╔════════════════════════════════════════╗" << endl;
-        cout << "║       🏠 GESTION DES CHAMBRES         ║" << endl;
-        cout << "╚════════════════════════════════════════╝" << endl;
-        cout << "\n[1] Ajouter  [2] Rechercher  [3] Modifier" << endl;
-        cout << "[4] Supprimer  [5] Lister  [0] Retour" << endl;
-        cout << "Choix: ";
-        cin >> choix;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        clearConsole();
+    cout << "=== GESTION CHAMBRES ===" << endl;
+    cout << "[1] Ajouter  [2] Rechercher (Smart)  [3] Modifier  [4] Supprimer  [5] Lister" << endl;
+    int choix = InputValidator::getInt("Choix: ");
 
-        try {
-            switch(choix) {
-                case 1: ajouterChambreInterface(hotel); break;
-                case 2: rechercherChambreInterface(hotel); break;
-                case 3: modifierChambreInterface(hotel); break;
-                case 4: supprimerChambreInterface(hotel); break;
-                case 5:
-                    hotel.listerChambres();
-                    pauseConsole();
-                    clearConsole();
-                    break;
-                case 0: break;
-                default: cout << "❌ Invalide!" << endl; pauseConsole(); clearConsole();
-            }
-        } catch (const HotelException& e) {
-            cout << "\n❌ " << e.what() << endl;
-            pauseConsole();
-            clearConsole();
-        }
-    } while(choix != 0);
-}
-
-void ajouterChambreInterface(Hotel& hotel) {
-    int num, surf, type;
-    double prix;
-    cout << "=== NOUVELLE CHAMBRE ===" << endl;
-    cout << "[1] Simple  [2] Double  [3] Suite" << endl;
-    cout << "Type: "; cin >> type;
-    cout << "Numéro: "; cin >> num;
-    cout << "Prix/nuit: "; cin >> prix;
-    cout << "Superficie: "; cin >> surf;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    shared_ptr<Chambre> ch;
-    if (type == 1) {
-        ch = make_shared<ChambreSimple>(num, prix, surf);
-    } else if (type == 2) {
-        ch = make_shared<ChambreDouble>(num, prix, surf, false, false);
-    } else if (type == 3) {
-        ch = make_shared<Suite>(num, prix, surf, false, false, 2);
+    switch(choix) {
+        case 1: ajouterChambreInterface(hotel); break;
+        case 2: rechercherChambreInterface(hotel); break; // <--- Uses Smart Search
+        case 3: modifierChambreInterface(hotel); break;
+        case 4: supprimerChambreInterface(hotel); break;
+        case 5: hotel.listerChambres(); break;
     }
-
-    if (ch) {
-        hotel.ajouterChambre(ch);
-        cout << "\n✅ Chambre ajoutée!" << endl;
-    }
-    pauseConsole();
-    clearConsole();
 }
 
 void rechercherChambreInterface(Hotel& hotel) {
-    int num;
-    cout << "Numéro: "; cin >> num;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    auto ch = hotel.rechercherChambre(num);
-    if (ch) { cout << endl; ch->afficherDetails(); }
-    else cout << "\n❌ Introuvable!" << endl;
-    pauseConsole();
-    clearConsole();
+    // SMART SEARCH INTERFACE
+    string keyword = InputValidator::getString("🔍 Rechercher (Numéro, Type ou 'libre'): ");
+    
+    auto resultats = hotel.rechercherChambresSmart(keyword);
+    
+    if (resultats.empty()) {
+        cout << ErrorHandler::YELLOW << "❌ Aucune chambre trouvée." << ErrorHandler::RESET << endl;
+    } else {
+        cout << "\n✅ " << resultats.size() << " résultat(s) trouvé(s):\n" << endl;
+        for (const auto& ch : resultats) {
+            cout << *ch << (ch->estOccupee() ? " [OCCUPÉE]" : " [LIBRE]") << endl;
+        }
+    }
+}
+
+void ajouterChambreInterface(Hotel& hotel) {
+    cout << "[1] Simple [2] Double [3] Suite\n";
+    int t = InputValidator::getInt("Type: ");
+    int n = InputValidator::getInt("Numero: ");
+    double p = InputValidator::getDouble("Prix: ");
+    int s = InputValidator::getInt("Superficie: ");
+    
+    shared_ptr<Chambre> ch;
+    if(t==1) ch=make_shared<ChambreSimple>(n,p,s);
+    else if(t==2) ch=make_shared<ChambreDouble>(n,p,s,0,0);
+    else ch=make_shared<Suite>(n,p,s,0,0,2);
+    
+    if(ch) {
+        hotel.ajouterChambre(ch);
+        cout << "✅ Ajouté." << endl;
+    }
 }
 
 void modifierChambreInterface(Hotel& hotel) {
-    int num;
-    double prix;
-    cout << "Numéro: "; cin >> num;
-    cout << "Nouveau prix: "; cin >> prix;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    hotel.modifierChambre(num, prix);
-    cout << "\n✅ Modifié!" << endl;
-    pauseConsole();
-    clearConsole();
+    int n = InputValidator::getInt("Numéro: ");
+    double p = InputValidator::getDouble("Nouveau prix: ");
+    hotel.modifierChambre(n, p);
+    cout << "✅ Modifié." << endl;
 }
 
 void supprimerChambreInterface(Hotel& hotel) {
-    int num;
-    char c;
-    cout << "Numéro: "; cin >> num;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Confirmer (o/n)? "; cin >> c;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    if (c == 'o') {
-        hotel.supprimerChambre(num);
-        cout << "\n✅ Supprimé!" << endl;
+    int n = InputValidator::getInt("Numéro: ");
+    if(InputValidator::getConfirmation("Confirmer suppression ?")) {
+        hotel.supprimerChambre(n);
+        cout << "✅ Supprimé." << endl;
     }
-    pauseConsole();
-    clearConsole();
 }
 
-// ==================== GESTION RÉSERVATIONS ====================
+// ==================== RESERVATIONS ====================
 
-void menuGestionReservations(Hotel& hotel, shared_ptr<User> user) {
-    int choix;
-    do {
-        cout << "\n╔════════════════════════════════════════╗" << endl;
-        cout << "║     📋 GESTION DES RÉSERVATIONS       ║" << endl;
-        cout << "╚════════════════════════════════════════╝" << endl;
-        cout << "\n[1] Créer  [2] Consulter  [3] Annuler" << endl;
-        cout << "[4] Lister  [0] Retour" << endl;
-        cout << "Choix: ";
-        cin >> choix;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        clearConsole();
-
-        try {
-            switch(choix) {
-                case 1: creerReservationInterface(hotel); break;
-                case 2: consulterReservationInterface(hotel); break;
-                case 3: annulerReservationInterface(hotel); break;
-                case 4:
-                    hotel.listerReservations();
-                    pauseConsole();
-                    clearConsole();
-                    break;
-                case 0: break;
-                default: cout << "❌ Invalide!" << endl; pauseConsole(); clearConsole();
-            }
-        } catch (const HotelException& e) {
-            cout << "\n❌ " << e.what() << endl;
-            pauseConsole();
-            clearConsole();
-        }
-    } while(choix != 0);
+void menuGestionReservations(Hotel& h, shared_ptr<User> u) {
+    cout << "=== GESTION RESERVATIONS ===" << endl;
+    cout << "[1] Créer [2] Consulter [3] Annuler [4] Lister\n";
+    int c = InputValidator::getInt("Choix: ");
+    if(c==1) creerReservationInterface(h);
+    else if(c==2) consulterReservationInterface(h);
+    else if(c==3) annulerReservationInterface(h);
+    else if(c==4) h.listerReservations();
 }
 
-void creerReservationInterface(Hotel& hotel) {
-    int idClient, numCh, j1, m1, a1, j2, m2, a2;
-    cout << "=== NOUVELLE RÉSERVATION ===" << endl;
-    cout << "ID client: "; cin >> idClient;
-    cout << "Numéro chambre: "; cin >> numCh;
-    cout << "Arrivée (JJ MM AAAA): "; cin >> j1 >> m1 >> a1;
-    cout << "Départ (JJ MM AAAA): "; cin >> j2 >> m2 >> a2;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    Date debut(j1, m1, a1);
-    Date fin(j2, m2, a2);
-    hotel.creerReservation(idClient, numCh, debut, fin);
-    pauseConsole();
-    clearConsole();
+void creerReservationInterface(Hotel& h) {
+    int c = InputValidator::getInt("ID Client: ");
+    int r = InputValidator::getInt("Num Chambre: ");
+    int j1,m1,a1,j2,m2,a2;
+    InputValidator::getDate("Arrivée", j1,m1,a1);
+    InputValidator::getDate("Départ", j2,m2,a2);
+    h.creerReservation(c, r, Date(j1,m1,a1), Date(j2,m2,a2));
+    cout << "✅ Réservé." << endl;
 }
 
-void consulterReservationInterface(Hotel& hotel) {
-    int id;
-    cout << "ID réservation: "; cin >> id;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    auto res = hotel.rechercherReservation(id);
-    if (res) { cout << endl; res->afficher(); }
-    else cout << "\n❌ Introuvable!" << endl;
-    pauseConsole();
-    clearConsole();
+void consulterReservationInterface(Hotel& h) {
+    int id = InputValidator::getInt("ID Réservation: ");
+    auto r = h.rechercherReservation(id);
+    if(r) cout << *r << endl; else cout << "❌ Introuvable." << endl;
 }
 
-void annulerReservationInterface(Hotel& hotel) {
-    int id;
-    char c;
-    cout << "ID réservation: "; cin >> id;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    cout << "Confirmer (o/n)? "; cin >> c;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    if (c == 'o') {
-        hotel.annulerReservation(id);
+void annulerReservationInterface(Hotel& h) {
+    int id = InputValidator::getInt("ID Réservation: ");
+    if(InputValidator::getConfirmation("Annuler cette réservation ?")) {
+        h.annulerReservation(id);
+        cout << "✅ Annulé." << endl;
     }
-    pauseConsole();
-    clearConsole();
 }
 
-// ==================== RECHERCHE & DISPONIBILITÉS ====================
+// ==================== DISPONIBILITÉS ====================
 
-void menuRechercheDisponibilites(Hotel& hotel, shared_ptr<User> user) {
-    int choix;
-    do {
-        cout << "\n╔════════════════════════════════════════╗" << endl;
-        cout << "║   🔍 RECHERCHE & DISPONIBILITÉS       ║" << endl;
-        cout << "╚════════════════════════════════════════╝" << endl;
-        cout << "\n[1] Chambres disponibles  [2] Calculer coût" << endl;
-        cout << "[0] Retour" << endl;
-        cout << "Choix: ";
-        cin >> choix;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        clearConsole();
-
-        try {
-            switch(choix) {
-                case 1: chambresDisponiblesInterface(hotel); break;
-                case 2: calculerCoutSejourInterface(hotel); break;
-                case 0: break;
-                default: cout << "❌ Invalide!" << endl; pauseConsole(); clearConsole();
-            }
-        } catch (const HotelException& e) {
-            cout << "\n❌ " << e.what() << endl;
-            pauseConsole();
-            clearConsole();
-        }
-    } while(choix != 0);
+void menuRechercheDisponibilites(Hotel& h, shared_ptr<User> u) {
+    cout << "=== DISPONIBILITÉS ===" << endl;
+    cout << "[1] Voir Chambres Dispo  [2] Calculer Coût\n";
+    int c = InputValidator::getInt("Choix: ");
+    if(c==1) chambresDisponiblesInterface(h);
+    else if(c==2) calculerCoutSejourInterface(h);
 }
 
-void chambresDisponiblesInterface(Hotel& hotel) {
-    int j1, m1, a1, j2, m2, a2;
-    cout << "Arrivée (JJ MM AAAA): "; cin >> j1 >> m1 >> a1;
-    cout << "Départ (JJ MM AAAA): "; cin >> j2 >> m2 >> a2;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    Date debut(j1, m1, a1);
-    Date fin(j2, m2, a2);
-
-    auto chambres = hotel.chambresDisponibles(debut, fin);
-    cout << "\n🏠 Chambres disponibles: " << chambres.size() << endl << endl;
-    for (const auto& ch : chambres) {
-        cout << *ch << endl;
-    }
-    pauseConsole();
-    clearConsole();
+void chambresDisponiblesInterface(Hotel& h) {
+    int j1,m1,a1,j2,m2,a2;
+    InputValidator::getDate("De", j1,m1,a1);
+    InputValidator::getDate("À", j2,m2,a2);
+    auto l = h.chambresDisponibles(Date(j1,m1,a1), Date(j2,m2,a2));
+    cout << "\n🏠 Chambres libres: " << l.size() << endl;
+    for(auto c : l) cout << *c << endl;
 }
 
-void calculerCoutSejourInterface(Hotel& hotel) {
-    int num, j1, m1, a1, j2, m2, a2;
-    cout << "Numéro chambre: "; cin >> num;
-    cout << "Arrivée (JJ MM AAAA): "; cin >> j1 >> m1 >> a1;
-    cout << "Départ (JJ MM AAAA): "; cin >> j2 >> m2 >> a2;
-    cin.ignore(numeric_limits<streamsize>::max(), '\n');
-
-    Date debut(j1, m1, a1);
-    Date fin(j2, m2, a2);
-
-    double ccout = hotel.calculerCoutSejour(num, debut, fin);
-    cout << "\n💰 Coût total: " << ccout << " DH" << endl;
-    pauseConsole();
-    clearConsole();
+void calculerCoutSejourInterface(Hotel& h) {
+    int n = InputValidator::getInt("Numéro Chambre: ");
+    int j1,m1,a1,j2,m2,a2;
+    InputValidator::getDate("De", j1,m1,a1);
+    InputValidator::getDate("À", j2,m2,a2);
+    cout << "💰 Coût total: " << h.calculerCoutSejour(n, Date(j1,m1,a1), Date(j2,m2,a2)) << " DH" << endl;
 }
 
-// ==================== GESTION UTILISATEURS ====================
+// ==================== UTILISATEURS ====================
 
-void menuGestionUtilisateurs(AuthenticationManager& authManager, shared_ptr<User> user) {
-    int choix;
-    do {
-        cout << "\n╔════════════════════════════════════════╗" << endl;
-        cout << "║   👨‍💼 GESTION DU PERSONNEL            ║" << endl;
-        cout << "╚════════════════════════════════════════╝" << endl;
-        cout << "\n[1] Créer admin  [2] Créer employé  [3] Lister" << endl;
-        cout << "[0] Retour" << endl;
-        cout << "Choix: ";
-        cin >> choix;
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        clearConsole();
-
-        try {
-            switch(choix) {
-                case 1: creerAdminInterface(authManager, user); break;
-                case 2: creerEmployeInterface(authManager, user); break;
-                case 3: listerUtilisateursInterface(authManager, user); break;
-                case 0: break;
-                default: cout << "❌ Invalide!" << endl; pauseConsole(); clearConsole();
-            }
-        } catch (const HotelException& e) {
-            cout << "\n❌ " << e.what() << endl;
-            pauseConsole();
-            clearConsole();
-        }
-    } while(choix != 0);
+void menuGestionUtilisateurs(AuthenticationManager& am, shared_ptr<User> u) {
+    cout << "=== GESTION STAFF ===" << endl;
+    cout << "[1] Créer Admin [2] Créer Employé [3] Lister\n";
+    int c = InputValidator::getInt("Choix: ");
+    if(c==1) creerAdminInterface(am, u);
+    else if(c==2) creerEmployeInterface(am, u);
+    else if(c==3) listerUtilisateursInterface(am, u);
 }
 
-void creerAdminInterface(AuthenticationManager& authManager, shared_ptr<User> user) {
-    string username, pass, nom, prenom, email;
-    cout << "=== CRÉER ADMIN ===" << endl;
-    cout << "Username: "; getline(cin, username);
-    cout << "Password: "; getline(cin, pass);
-    cout << "Nom: "; getline(cin, nom);
-    cout << "Prénom: "; getline(cin, prenom);
-    cout << "Email: "; getline(cin, email);
-    authManager.creerAdmin(username, pass, nom, prenom, email, user);
-    cout << "\n✅ Admin créé!" << endl;
-    pauseConsole();
-    clearConsole();
+void creerAdminInterface(AuthenticationManager& am, shared_ptr<User> u) {
+    string user = InputValidator::getString("Username: ");
+    string pass = InputValidator::getString("Password: ");
+    string nom = InputValidator::getString("Nom: ");
+    string prenom = InputValidator::getString("Prénom: ");
+    string email = InputValidator::getString("Email: ");
+    am.creerAdmin(user, pass, nom, prenom, email, u);
+    cout << "✅ Admin créé." << endl;
 }
 
-void creerEmployeInterface(AuthenticationManager& authManager, shared_ptr<User> user) {
-    string username, pass, nom, prenom, email, poste;
-    cout << "=== CRÉER EMPLOYÉ ===" << endl;
-    cout << "Username: "; getline(cin, username);
-    cout << "Password: "; getline(cin, pass);
-    cout << "Nom: "; getline(cin, nom);
-    cout << "Prénom: "; getline(cin, prenom);
-    cout << "Email: "; getline(cin, email);
-    cout << "Poste: "; getline(cin, poste);
-    authManager.creerEmploye(username, pass, nom, prenom, email, poste, user);
-    cout << "\n✅ Employé créé!" << endl;
-    pauseConsole();
-    clearConsole();
+void creerEmployeInterface(AuthenticationManager& am, shared_ptr<User> u) {
+    string user = InputValidator::getString("Username: ");
+    string pass = InputValidator::getString("Password: ");
+    string nom = InputValidator::getString("Nom: ");
+    string prenom = InputValidator::getString("Prénom: ");
+    string email = InputValidator::getString("Email: ");
+    string poste = InputValidator::getString("Poste: ");
+    am.creerEmploye(user, pass, nom, prenom, email, poste, u);
+    cout << "✅ Employé créé." << endl;
 }
 
-void listerUtilisateursInterface(AuthenticationManager& authManager, shared_ptr<User> user) {
-    cout << "\n=== LISTE DES UTILISATEURS ===" << endl;
-    auto users = authManager.listerUtilisateurs(user);
-    for (const auto& u : users) {
-        cout << *u << endl;
-    }
-    cout << "\nTotal: " << users.size() << endl;
-    pauseConsole();
-    clearConsole();
-}
-
-void menuProfil(shared_ptr<User> user, AuthenticationManager& authManager) {
-    cout << "\n=== MON PROFIL ===" << endl;
-    user->afficher();
-    pauseConsole();
-    clearConsole();
+void listerUtilisateursInterface(AuthenticationManager& am, shared_ptr<User> u) {
+    auto v = am.listerUtilisateurs(u);
+    for(auto x : v) cout << *x << endl;
 }

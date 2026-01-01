@@ -2,16 +2,20 @@
 #define HOTEL_H
 
 #include <vector>
+#include <string>
 #include <memory>
-#include <sqlite3.h> // SQLITE
+#include <sqlite3.h>
 #include "Client.h"
 #include "Chambre.h"
-#include "ChambreSimple.h"
-#include "ChambreDouble.h"
-#include "Suite.h"
 #include "Reservation.h"
 #include "User.h"
 #include "HotelException.h"
+#include "Date.h"
+
+// Forward declarations
+class ChambreSimple;
+class ChambreDouble;
+class Suite;
 
 using namespace std;
 
@@ -23,70 +27,68 @@ private:
     vector<shared_ptr<Chambre>> chambres;
     vector<shared_ptr<Reservation>> reservations;
     shared_ptr<User> utilisateurCourant;
+
     int prochainIdClient;
     int prochainIdReservation;
-    sqlite3* db; // Pointeur DB
+    sqlite3* db;
 
-    static string getDataPath() {
+    string getDataPath() const {
         #ifdef DATA_DIR
             return string(DATA_DIR) + "/";
         #else
             return "data/";
         #endif
     }
-    
-    void initDB(); 
-    void verifierPermission(bool permission, const string& action) const;
+
+    void initDB();
 
 public:
     Hotel(const string& nom, const string& adresse);
     ~Hotel();
 
+    // === SETUP & DATA ===
+    void seedData(); // <--- NEW: Populates DB if empty
+    void chargerDonnees();
     void setUtilisateurCourant(shared_ptr<User> user);
-    
-    string getNom() const { return nom; }
-    string getAdresse() const { return adresse; }
-    int getNombreClients() const { return clients.size(); }
-    int getNombreChambres() const { return chambres.size(); }
-    int getNombreReservations() const { return reservations.size(); }
+    void verifierPermission(bool permission, const string& action) const;
 
-    // CRUD Clients
+    // === CRUD CLIENTS ===
     void ajouterClient(const string& nom, const string& prenom, const string& email, const string& telephone);
-    shared_ptr<Client> rechercherClient(int id) const;
-    vector<shared_ptr<Client>> rechercherClientParNom(const string& nom) const;
     void modifierClient(int id, const string& email, const string& telephone);
     void supprimerClient(int id);
-    void listerClients() const;
+    shared_ptr<Client> rechercherClient(int id) const;
+    
+    // <--- NEW: Smart Search Client (Name, Email, Phone, ID)
+    vector<shared_ptr<Client>> rechercherClientsSmart(const string& keyword) const;
 
-    // CRUD Chambres
+    // === CRUD CHAMBRES ===
     void ajouterChambre(shared_ptr<Chambre> chambre);
-    shared_ptr<Chambre> rechercherChambre(int numero) const;
     void modifierChambre(int numero, double nouveauPrix);
     void supprimerChambre(int numero);
-    void listerChambres() const;
-    void listerChambresParType(const string& type) const;
+    shared_ptr<Chambre> rechercherChambre(int numero) const;
 
-    // Réservations
+    // <--- NEW: Smart Search Room (Type, Price, Status, Number)
+    vector<shared_ptr<Chambre>> rechercherChambresSmart(const string& keyword) const;
+
+    // === RESERVATIONS ===
     void creerReservation(int idClient, int numeroChambre, Date debut, Date fin);
     void annulerReservation(int idReservation);
-    void listerReservations() const;
-    void listerReservationsClient(int idClient) const;
-    void listerReservationsChambre(int numeroChambre) const;
     shared_ptr<Reservation> rechercherReservation(int id) const;
-
-    // Disponibilités
+    
+    // === HELPERS ===
     vector<shared_ptr<Chambre>> chambresDisponibles(Date debut, Date fin) const;
     bool verifierDisponibilite(int numeroChambre, Date debut, Date fin) const;
     double calculerCoutSejour(int numeroChambre, Date debut, Date fin) const;
-
-    // Stats
+    
+    // === STATS ===
+    int getNombreClients() const { return clients.size(); }
+    int getNombreChambres() const { return chambres.size(); }
+    int getNombreReservations() const { return reservations.size(); }
+    
+    void listerClients() const;
+    void listerChambres() const;
+    void listerReservations() const;
     void afficherStatistiques() const;
-    double calculerTauxOccupation() const;
-    double calculerRevenusTotal() const;
-
-    // Persistence
-    void chargerDonnees();
-    void sauvegarderDonnees() const {} // Vide
 };
 
 #endif

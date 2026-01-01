@@ -1,6 +1,16 @@
-#include "Hotel.h"
-#include <iomanip>
+#include "../../include/core/Hotel.h"
+#include "../../include/core/ChambreSimple.h"
+#include "../../include/core/ChambreDouble.h"
+#include "../../include/core/Suite.h"
 #include <iostream>
+#include <algorithm> // Required for search transformations
+
+// Helper for case-insensitive search
+string toLower(const string& str) {
+    string s = str;
+    transform(s.begin(), s.end(), s.begin(), ::tolower);
+    return s;
+}
 
 Hotel::Hotel(const string& nom, const string& adresse)
     : nom(nom), adresse(adresse), prochainIdClient(1), prochainIdReservation(1), db(nullptr) {
@@ -13,18 +23,56 @@ Hotel::~Hotel() { if(db) sqlite3_close(db); }
 
 void Hotel::initDB() {
     char* err;
-    // Table Clients
     sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Clients (id INTEGER PRIMARY KEY, nom TEXT, prenom TEXT, email TEXT, tel TEXT);", 0, 0, &err);
     
-    // Table Chambres
     sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Chambres ("
                      "numero INTEGER PRIMARY KEY, type TEXT, prix REAL, superficie INTEGER, occupee INTEGER, "
                      "litSimple INT, litsJumeaux INT, balcon INT, jacuzzi INT, vueOcean INT, pieces INT);", 0, 0, &err);
                      
-    // Table Reservations
     sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS Reservations ("
                      "id INTEGER PRIMARY KEY, clientId INT, chambreNum INT, "
                      "debut TEXT, fin TEXT, cout REAL, statut INT);", 0, 0, &err);
+}
+
+// === NEW: SEED DATA IMPLEMENTATION ===
+void Hotel::seedData() {
+    // Check if data already exists to avoid duplicates
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(db, "SELECT count(*) FROM Clients", -1, &stmt, 0);
+    int count = 0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) count = sqlite3_column_int(stmt, 0);
+    sqlite3_finalize(stmt);
+
+    if (count > 0) return; // Data exists, do nothing
+
+    cout << "🌱 Initialisation de la base de données avec des données de test..." << endl;
+
+    // 1. Clients (Realistic Moroccan Data)
+    const char* sqlClients = 
+        "INSERT INTO Clients VALUES (1, 'Bennani', 'Karim', 'karim.bennani@gmail.com', '0661123456');"
+        "INSERT INTO Clients VALUES (2, 'El Idrissi', 'Fatima', 'fatima.idrissi@yahoo.fr', '0663987654');"
+        "INSERT INTO Clients VALUES (3, 'Tazi', 'Mehdi', 'mehdi.tazi@outlook.com', '0655443322');"
+        "INSERT INTO Clients VALUES (4, 'Mansouri', 'Sara', 'sara.man@gmail.com', '0677889900');"
+        "INSERT INTO Clients VALUES (5, 'Chraibi', 'Omar', 'omar.chraibi@corporate.ma', '0611223344');";
+    sqlite3_exec(db, sqlClients, 0, 0, 0);
+
+    // 2. Chambres (Mix of Simple, Double, Suite)
+    const char* sqlChambres = 
+        "INSERT INTO Chambres VALUES (101, 'Simple', 450.0, 20, 0, 1, 0, 0, 0, 0, 0);"
+        "INSERT INTO Chambres VALUES (102, 'Simple', 450.0, 22, 0, 1, 0, 0, 0, 0, 0);"
+        "INSERT INTO Chambres VALUES (201, 'Double', 750.0, 35, 0, 0, 1, 1, 0, 0, 0);" // Balcon
+        "INSERT INTO Chambres VALUES (202, 'Double', 700.0, 30, 0, 0, 0, 0, 0, 0, 0);"
+        "INSERT INTO Chambres VALUES (301, 'Suite', 1500.0, 60, 0, 0, 0, 1, 1, 1, 2);" // Jacuzzi, Vue
+        "INSERT INTO Chambres VALUES (302, 'Suite', 2000.0, 85, 0, 0, 0, 1, 1, 1, 3);";
+    sqlite3_exec(db, sqlChambres, 0, 0, 0);
+
+    // 3. Reservations (History)
+    const char* sqlRes = 
+        "INSERT INTO Reservations VALUES (1, 1, 101, '2023-12-01', '2023-12-05', 1800.0, 0);"
+        "INSERT INTO Reservations VALUES (2, 3, 301, '2025-06-15', '2025-06-20', 7500.0, 0);";
+    sqlite3_exec(db, sqlRes, 0, 0, 0);
+
+    cout << "✅ Données insérées avec succès!" << endl;
 }
 
 void Hotel::setUtilisateurCourant(shared_ptr<User> user) { utilisateurCourant = user; }
@@ -34,7 +82,6 @@ void Hotel::verifierPermission(bool permission, const string& action) const {
     if (!permission) throw PermissionException(action);
 }
 
-// === LOAD DATA ===
 void Hotel::chargerDonnees() {
     clients.clear();
     chambres.clear();
@@ -42,7 +89,7 @@ void Hotel::chargerDonnees() {
     
     sqlite3_stmt* stmt;
     
-    // 1. Clients
+    // Load Clients
     sqlite3_prepare_v2(db, "SELECT * FROM Clients", -1, &stmt, 0);
     int maxId = 0;
     while(sqlite3_step(stmt) == SQLITE_ROW) {
@@ -57,7 +104,7 @@ void Hotel::chargerDonnees() {
     prochainIdClient = maxId + 1;
     sqlite3_finalize(stmt);
 
-    // 2. Chambres
+    // Load Chambres
     sqlite3_prepare_v2(db, "SELECT * FROM Chambres", -1, &stmt, 0);
     while(sqlite3_step(stmt) == SQLITE_ROW) {
         int num = sqlite3_column_int(stmt, 0);
@@ -87,7 +134,7 @@ void Hotel::chargerDonnees() {
     }
     sqlite3_finalize(stmt);
 
-    // 3. Reservations (AVEC DATE PARSING YYYY-MM-DD)
+    // Load Reservations
     sqlite3_prepare_v2(db, "SELECT * FROM Reservations", -1, &stmt, 0);
     maxId = 0;
     while(sqlite3_step(stmt) == SQLITE_ROW) {
@@ -95,7 +142,6 @@ void Hotel::chargerDonnees() {
         int cId = sqlite3_column_int(stmt, 1);
         int chNum = sqlite3_column_int(stmt, 2);
         
-        // Parse SQL Date (YYYY-MM-DD)
         string sDeb = (const char*)sqlite3_column_text(stmt, 3);
         string sFin = (const char*)sqlite3_column_text(stmt, 4);
         
@@ -109,8 +155,8 @@ void Hotel::chargerDonnees() {
         if(client && chambre) {
             auto res = make_shared<Reservation>(id, client, chambre, Date(d1,m1,y1), Date(d2,m2,y2));
             int status = sqlite3_column_int(stmt, 6);
-            if(status == 1) res->annuler(); // 1 = Annulée
-            else res->confirmer();          // 0 = Confirmée
+            if(status == 1) res->annuler();
+            else res->confirmer();
             
             reservations.push_back(res);
             client->ajouterReservation(id);
@@ -121,11 +167,48 @@ void Hotel::chargerDonnees() {
     sqlite3_finalize(stmt);
 }
 
-// === CRUD CLIENTS ===
+// === NEW: SMART SEARCH CLIENTS ===
+vector<shared_ptr<Client>> Hotel::rechercherClientsSmart(const string& keyword) const {
+    vector<shared_ptr<Client>> resultats;
+    string keyLower = toLower(keyword);
+
+    for (const auto& client : clients) {
+        // Search matches in Name, Surname, Email, or ID
+        if (toLower(client->getNom()).find(keyLower) != string::npos ||
+            toLower(client->getPrenom()).find(keyLower) != string::npos ||
+            toLower(client->getEmail()).find(keyLower) != string::npos ||
+            to_string(client->getId()) == keyLower) {
+            
+            resultats.push_back(client);
+        }
+    }
+    return resultats;
+}
+
+// === NEW: SMART SEARCH ROOMS ===
+vector<shared_ptr<Chambre>> Hotel::rechercherChambresSmart(const string& keyword) const {
+    vector<shared_ptr<Chambre>> resultats;
+    string keyLower = toLower(keyword);
+
+    for (const auto& ch : chambres) {
+        // Search matches in Type, Number, or Status text
+        bool matchesType = toLower(ch->getType()).find(keyLower) != string::npos;
+        bool matchesNum = to_string(ch->getNumero()).find(keyLower) != string::npos;
+        string statusText = ch->estOccupee() ? "occupee" : "libre";
+        bool matchesStatus = toLower(statusText).find(keyLower) != string::npos;
+
+        if (matchesType || matchesNum || matchesStatus) {
+            resultats.push_back(ch);
+        }
+    }
+    return resultats;
+}
+
+// === STANDARD CRUD ===
+
 void Hotel::ajouterClient(const string& nom, const string& prenom, const string& email, const string& telephone) {
     auto client = make_shared<Client>(prochainIdClient++, nom, prenom, email, telephone);
     clients.push_back(client);
-    
     char* sql = sqlite3_mprintf("INSERT INTO Clients VALUES (%d, '%q', '%q', '%q', '%q');",
         client->getId(), nom.c_str(), prenom.c_str(), email.c_str(), telephone.c_str());
     sqlite3_exec(db, sql, 0, 0, 0);
@@ -137,7 +220,6 @@ void Hotel::modifierClient(int id, const string& email, const string& telephone)
     if (!client) throw ClientInexistantException(id);
     client->setEmail(email);
     client->setTelephone(telephone);
-    
     char* sql = sqlite3_mprintf("UPDATE Clients SET email='%q', tel='%q' WHERE id=%d;", email.c_str(), telephone.c_str(), id);
     sqlite3_exec(db, sql, 0, 0, 0);
     sqlite3_free(sql);
@@ -157,7 +239,6 @@ void Hotel::supprimerClient(int id) {
     throw ClientInexistantException(id);
 }
 
-// === CRUD CHAMBRES ===
 void Hotel::ajouterChambre(shared_ptr<Chambre> chambre) {
     verifierPermission(utilisateurCourant->peutModifierChambres(), "Refusé");
     if (rechercherChambre(chambre->getNumero())) throw ReservationInvalideException("Existe déjà");
@@ -209,7 +290,6 @@ void Hotel::supprimerChambre(int numero) {
     throw ChambreInexistanteException(numero);
 }
 
-// === RESERVATIONS ===
 void Hotel::creerReservation(int idClient, int numeroChambre, Date debut, Date fin) {
     auto client = rechercherClient(idClient);
     if (!client) throw ClientInexistantException(idClient);
@@ -219,11 +299,10 @@ void Hotel::creerReservation(int idClient, int numeroChambre, Date debut, Date f
     if (!verifierDisponibilite(numeroChambre, debut, fin)) throw ChambreOccupeeException(numeroChambre);
 
     auto reservation = make_shared<Reservation>(prochainIdReservation++, client, chambre, debut, fin);
-    reservation->confirmer(); // Met à jour l'objet en mémoire
+    reservation->confirmer();
     reservations.push_back(reservation);
     client->ajouterReservation(reservation->getId());
 
-    // Insert Reservation (Utilisation de toSQLString)
     char* sql = sqlite3_mprintf("INSERT INTO Reservations VALUES (%d, %d, %d, '%q', '%q', %f, %d);",
         reservation->getId(), idClient, numeroChambre, 
         debut.toSQLString().c_str(), fin.toSQLString().c_str(), 
@@ -231,12 +310,9 @@ void Hotel::creerReservation(int idClient, int numeroChambre, Date debut, Date f
     sqlite3_exec(db, sql, 0, 0, 0);
     sqlite3_free(sql);
 
-    // Update Room Status in DB
     char* sqlRoom = sqlite3_mprintf("UPDATE Chambres SET occupee=1 WHERE numero=%d;", numeroChambre);
     sqlite3_exec(db, sqlRoom, 0, 0, 0);
     sqlite3_free(sqlRoom);
-
-    cout << "\n✅ Réservation #" << reservation->getId() << " créée!" << endl;
 }
 
 void Hotel::annulerReservation(int idReservation) {
@@ -244,23 +320,17 @@ void Hotel::annulerReservation(int idReservation) {
     auto reservation = rechercherReservation(idReservation);
     if (!reservation) throw ReservationInvalideException("Introuvable");
 
-    reservation->annuler(); // Update mémoire
-    
-    // Update Reservation Status DB
+    reservation->annuler();
     char* sql = sqlite3_mprintf("UPDATE Reservations SET statut=%d WHERE id=%d;", 
         (int)reservation->getStatut(), idReservation);
     sqlite3_exec(db, sql, 0, 0, 0);
     sqlite3_free(sql);
     
-    // Update Room Status DB
     char* sqlRoom = sqlite3_mprintf("UPDATE Chambres SET occupee=0 WHERE numero=%d;", reservation->getChambre()->getNumero());
     sqlite3_exec(db, sqlRoom, 0, 0, 0);
     sqlite3_free(sqlRoom);
-    
-    cout << "\n✅ Réservation #" << idReservation << " annulée!" << endl;
 }
 
-// Helpers existants inchangés
 shared_ptr<Client> Hotel::rechercherClient(int id) const {
     for (const auto& client : clients) if (client->getId() == id) return client;
     return nullptr;
@@ -273,11 +343,7 @@ shared_ptr<Reservation> Hotel::rechercherReservation(int id) const {
     for (const auto& res : reservations) if (res->getId() == id) return res;
     return nullptr;
 }
-vector<shared_ptr<Client>> Hotel::rechercherClientParNom(const string& nom) const {
-    vector<shared_ptr<Client>> res;
-    for (const auto& c : clients) if (c->getNom() == nom) res.push_back(c);
-    return res;
-}
+
 void Hotel::listerClients() const {
     cout << "\n--- CLIENTS ---\n";
     for(const auto& c : clients) cout << *c << endl;
@@ -312,8 +378,3 @@ void Hotel::afficherStatistiques() const {
     cout << "Clients: " << clients.size() << "\nChambres: " << chambres.size() 
          << "\nReservations: " << reservations.size() << endl;
 }
-double Hotel::calculerTauxOccupation() const { /* Implémentation standard */ return 0.0; }
-double Hotel::calculerRevenusTotal() const { /* Implémentation standard */ return 0.0; }
-void Hotel::listerChambresParType(const string& type) const { /* ... */ }
-void Hotel::listerReservationsClient(int idClient) const { /* ... */ }
-void Hotel::listerReservationsChambre(int numeroChambre) const { /* ... */ }
