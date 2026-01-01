@@ -1,6 +1,8 @@
 #include "../../include/auth/AuthenticationManager.h"
+#include "../../include/utils/Security.h" // <--- Include Security
 #include <iostream>
 
+// Standard constructor
 AuthenticationManager::AuthenticationManager() : prochainId(1), db(nullptr) {
     string dbPath = getDataPath() + "hotel.db";
     if(sqlite3_open(dbPath.c_str(), &db) != SQLITE_OK) {
@@ -34,7 +36,10 @@ void AuthenticationManager::chargerUtilisateurs() {
         while(sqlite3_step(stmt) == SQLITE_ROW) {
             int id = sqlite3_column_int(stmt, 0);
             string user = (const char*)sqlite3_column_text(stmt, 1);
-            string pass = (const char*)sqlite3_column_text(stmt, 2);
+            
+            // NOTE: 'pass' here is already the HASH loaded from DB
+            string pass = (const char*)sqlite3_column_text(stmt, 2); 
+            
             string nom = (const char*)sqlite3_column_text(stmt, 3);
             string prenom = (const char*)sqlite3_column_text(stmt, 4);
             string email = (const char*)sqlite3_column_text(stmt, 5);
@@ -70,21 +75,25 @@ void AuthenticationManager::creerAdminParDefaut() {
     sqlite3_finalize(stmt);
 
     if (count == 0) {
-        auto admin = make_shared<Admin>(prochainId++, "admin", "admin123", 
+        // === HASH DEFAULT PASSWORD ===
+        string hashedPass = Security::hashPassword("admin123");
+        
+        auto admin = make_shared<Admin>(prochainId++, "admin", hashedPass, 
                                         "Administrateur", "Système", "admin@hotel.com");
         utilisateurs.push_back(admin);
         
-        char* sql = sqlite3_mprintf("INSERT INTO Users VALUES (%d, 'admin', 'admin123', 'Administrateur', 'Système', 'admin@hotel.com', 'ADMIN', 1, NULL);", admin->getId());
+        // Insert HASH into DB
+        char* sql = sqlite3_mprintf("INSERT INTO Users VALUES (%d, 'admin', '%q', 'Administrateur', 'Système', 'admin@hotel.com', 'ADMIN', 1, NULL);", 
+            admin->getId(), hashedPass.c_str());
         sqlite3_exec(db, sql, 0, 0, 0);
         sqlite3_free(sql);
     }
 }
 
-// ================= SECURE LOGIN LOGIC =================
-
+// Login
 shared_ptr<User> AuthenticationManager::login(const string& username, const string& password) {
     // 1. Check Rate Limit / Lockout
-    auto& state = loginTracker[username]; // Get (or create default) state for this username
+    auto& state = loginTracker[username]; 
 
     if (state.attempts >= MAX_ATTEMPTS) {
         auto now = chrono::steady_clock::now();
@@ -92,48 +101,35 @@ shared_ptr<User> AuthenticationManager::login(const string& username, const stri
             auto remaining = chrono::duration_cast<chrono::seconds>(state.lockoutEnd - now).count();
             throw AuthenticationException("🛑 Compte temporairement bloqué. Réessayez dans " + to_string(remaining) + " secondes.");
         } else {
-            // Lockout expired, reset attempts
-            state.attempts = 0;
+            state.attempts = 0; // Lockout expired
         }
     }
 
-    // 2. Search and Verify
+    // 2. Auth Logic
     for (auto& user : utilisateurs) {
         if (user->getUsername() == username) {
             
-            if (!user->estActif()) {
-                throw AuthenticationException("Ce compte a été désactivé par un administrateur.");
-            }
+            if (!user->estActif()) throw AuthenticationException("Ce compte a été désactivé.");
 
+            // Calls User::verifierMotDePasse which now hashes the input 'password'
             if (user->verifierMotDePasse(password)) {
-                // SUCCESS
-                state.attempts = 0; // Reset counter on success
-                // Optionally remove from tracker to save memory: loginTracker.erase(username);
-                
+                state.attempts = 0;
                 utilisateurConnecte = user;
                 return user;
             } else {
-                // FAILURE (Wrong Password)
                 state.attempts++;
                 int retriesLeft = MAX_ATTEMPTS - state.attempts;
                 
                 if (state.attempts >= MAX_ATTEMPTS) {
                     state.lockoutEnd = chrono::steady_clock::now() + chrono::seconds(LOCKOUT_SECONDS);
-                    throw AuthenticationException("⛔ Trop d'échecs. Compte verrouillé pour " + to_string(LOCKOUT_SECONDS) + "s.");
+                    throw AuthenticationException("⛔ Trop d'échecs. Compte verrouillé pour 30s.");
                 }
-                
                 throw AuthenticationException("Mot de passe incorrect. (Essais restants: " + to_string(retriesLeft) + ")");
             }
         }
     }
-    
-    // User not found
-    // Note: In a highly secure system, you might not want to reveal "User not found" vs "Wrong password"
-    // to prevent username enumeration, but for this project scope, "Utilisateur introuvable" is fine.
     throw AuthenticationException("Utilisateur introuvable");
 }
-
-// ======================================================
 
 void AuthenticationManager::logout() { utilisateurConnecte = nullptr; }
 bool AuthenticationManager::estConnecte() const { return utilisateurConnecte != nullptr; }
@@ -145,11 +141,14 @@ void AuthenticationManager::creerAdmin(const string& username, const string& pas
     if (!createur || !createur->peutGererUtilisateurs()) throw PermissionException("Refusé");
     if (!usernameDisponible(username)) throw AuthenticationException("Pris");
     
-    auto admin = make_shared<Admin>(prochainId++, username, password, nom, prenom, email);
+    // === HASH PASSWORD ===
+    string hashedPass = Security::hashPassword(password);
+    
+    auto admin = make_shared<Admin>(prochainId++, username, hashedPass, nom, prenom, email);
     utilisateurs.push_back(admin);
 
     char* sql = sqlite3_mprintf("INSERT INTO Users VALUES (%d, '%q', '%q', '%q', '%q', '%q', 'ADMIN', 1, NULL);",
-        admin->getId(), username.c_str(), password.c_str(), nom.c_str(), prenom.c_str(), email.c_str());
+        admin->getId(), username.c_str(), hashedPass.c_str(), nom.c_str(), prenom.c_str(), email.c_str());
     sqlite3_exec(db, sql, 0, 0, 0);
     sqlite3_free(sql);
 }
@@ -161,16 +160,18 @@ void AuthenticationManager::creerEmploye(const string& username, const string& p
     if (!createur || !createur->peutGererUtilisateurs()) throw PermissionException("Refusé");
     if (!usernameDisponible(username)) throw AuthenticationException("Pris");
     
-    auto emp = make_shared<Employe>(prochainId++, username, password, nom, prenom, email, poste);
+    // === HASH PASSWORD ===
+    string hashedPass = Security::hashPassword(password);
+    
+    auto emp = make_shared<Employe>(prochainId++, username, hashedPass, nom, prenom, email, poste);
     utilisateurs.push_back(emp);
 
     char* sql = sqlite3_mprintf("INSERT INTO Users VALUES (%d, '%q', '%q', '%q', '%q', '%q', 'EMPLOYE', 1, '%q');",
-        emp->getId(), username.c_str(), password.c_str(), nom.c_str(), prenom.c_str(), email.c_str(), poste.c_str());
+        emp->getId(), username.c_str(), hashedPass.c_str(), nom.c_str(), prenom.c_str(), email.c_str(), poste.c_str());
     sqlite3_exec(db, sql, 0, 0, 0);
     sqlite3_free(sql);
 }
 
-// Modification
 void AuthenticationManager::modifierUtilisateur(int id, const string& email, shared_ptr<User> modificateur) {
     if (!modificateur || !modificateur->peutGererUtilisateurs()) throw PermissionException("Refusé");
     auto user = rechercherUtilisateur(id);
@@ -182,7 +183,6 @@ void AuthenticationManager::modifierUtilisateur(int id, const string& email, sha
     sqlite3_free(sql);
 }
 
-// Suppression
 void AuthenticationManager::supprimerUtilisateur(int id, shared_ptr<User> suppresseur) {
     if (!suppresseur || !suppresseur->peutGererUtilisateurs()) throw PermissionException("Refusé");
     if (id == suppresseur->getId()) throw AuthenticationException("Auto-suppression interdite");
@@ -225,8 +225,11 @@ void AuthenticationManager::reinitialiserMotDePasse(int userId, const string& no
     if (!initiateur || !initiateur->peutGererUtilisateurs()) throw PermissionException("Refusé");
     auto user = rechercherUtilisateur(userId);
     if (user) {
-        user->setPassword(nouveauPass);
-        char* sql = sqlite3_mprintf("UPDATE Users SET password='%q' WHERE id=%d;", nouveauPass.c_str(), userId);
+        // === HASH PASSWORD ===
+        string hashedPass = Security::hashPassword(nouveauPass);
+        
+        user->setPassword(hashedPass); // Update Object
+        char* sql = sqlite3_mprintf("UPDATE Users SET password='%q' WHERE id=%d;", hashedPass.c_str(), userId);
         sqlite3_exec(db, sql, 0, 0, 0);
         sqlite3_free(sql);
     }

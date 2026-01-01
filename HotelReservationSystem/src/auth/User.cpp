@@ -1,26 +1,34 @@
-#include "User.h"
+#include "../../include/auth/User.h"
+#include "../../include/utils/Security.h" // <--- Include Security
+#include <iostream>
+
+using namespace std;
 
 // Constructeur
 User::User(int id, string user, string pass, string nom, string prenom, string email)
-    : id(id), username(user), password(pass), nom(nom), prenom(prenom), 
-      email(email), actif(true) {}
+    : id(id), username(user), password(pass), nom(nom), prenom(prenom), email(email), actif(true) {}
 
-// Vérifier le mot de passe
+// === SECURITY UPDATE HERE ===
+
 bool User::verifierMotDePasse(const string& pass) const {
-    return password == pass;
+    // Hash the input and compare with the stored hash
+    string inputHash = Security::hashPassword(pass);
+    return this->password == inputHash;
 }
 
-// Changer le mot de passe
 void User::changerMotDePasse(const string& ancienPass, const string& nouveauPass) {
+    // Verify old password (this handles hashing internaly)
     if (verifierMotDePasse(ancienPass)) {
-        password = nouveauPass;
+        // Hash the new password before storing it
+        this->password = Security::hashPassword(nouveauPass);
     }
 }
 
-// Afficher les informations
+// ============================
+// Affichage
 void User::afficher() const {
     cout << "╔════════════════════════════════════════╗" << endl;
-    cout << "║       INFORMATIONS UTILISATEUR        ║" << endl;
+    cout << "║       INFORMATIONS UTILISATEUR         ║" << endl;
     cout << "╚════════════════════════════════════════╝" << endl;
     cout << "ID           : " << id << endl;
     cout << "Username     : " << username << endl;
@@ -31,9 +39,9 @@ void User::afficher() const {
     cout << "Statut       : " << (actif ? "✅ Actif" : "❌ Inactif") << endl;
 }
 
-// Surcharge de 
+
+// Surcharge de <<
 ostream& operator<<(ostream& os, const User& user) {
-    os << "[" << user.id << "] " << user.username << " - " 
-       << user.prenom << " " << user.nom << " (" << user.getRoleString() << ")";
+    os << "[" << user.id << "] " << user.username << " (" << user.getRoleString() << ")";
     return os;
 }
