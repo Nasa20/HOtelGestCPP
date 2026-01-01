@@ -87,8 +87,8 @@ int main() {
         // === STARTUP DATA LOADING ===
         try {
             authManager.chargerUtilisateurs();
-            hotel.seedData();       // <--- SEED DATA CALL
-            hotel.chargerDonnees(); // <--- LOAD DATA CALL
+            hotel.seedData();
+            hotel.chargerDonnees();
         } catch (const HotelException& e) {
             ErrorHandler::handle(e);
         }
@@ -136,7 +136,7 @@ void clearConsole() {
 
 void afficherBanniere() {
     cout << "╔════════════════════════════════════════════════╗" << endl;
-    cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v2.6 (Pro)    ║" << endl;
+    cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v3.0 (Exp)    ║" << endl;
     cout << "║        Hôtel Le Grand Palace                  ║" << endl;
     cout << "╚════════════════════════════════════════════════╝" << endl;
 }
@@ -171,9 +171,16 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
         cout << "[4] 🔍 Disponibilités" << endl;
         cout << "[5] 📊 Statistiques" << endl;
         cout << "[6] 👨‍💼 Personnel" << endl;
+        
+        // UPDATE: Show option [7] only for Admins
+        if (user->peutExporterDonnees()) {
+            cout << "[7] 📥 Exporter Données (Admin)" << endl;
+        }
+
         cout << "[0] 🚪 Quitter" << endl;
         
-        choix = InputValidator::getInt("Choix: ", 0, 6);
+        // Allow up to option 7
+        choix = InputValidator::getInt("Choix: ", 0, 7);
         clearConsole();
 
         try {
@@ -184,6 +191,11 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
                 case 4: menuRechercheDisponibilites(hotel, user); break;
                 case 5: if (user->peutVoirStatistiques()) hotel.afficherStatistiques(); break;
                 case 6: if (user->peutGererUtilisateurs()) menuGestionUtilisateurs(authManager, user); break;
+                case 7: 
+                    // Verify again for safety, though menu hides it usually
+                    if (user->peutExporterDonnees()) hotel.exporterDonnees(); 
+                    else cout << "⛔ Accès refusé." << endl;
+                    break;
                 case 0: break;
             }
         } catch (const HotelException& e) { ErrorHandler::handle(e); }
@@ -198,7 +210,6 @@ void menuGestionClients(Hotel& hotel, shared_ptr<User> user) {
     cout << "=== GESTION CLIENTS ===" << endl;
     cout << "[1] Ajouter  [2] Rechercher (Smart)  [3] Modifier  [4] Supprimer  [5] Lister  [0] Retour" << endl;
     
-    // UPDATE: Valid options [0-5]
     int choix = InputValidator::getInt("Choix: ", 0, 5);
     
     switch(choix) {
@@ -207,7 +218,7 @@ void menuGestionClients(Hotel& hotel, shared_ptr<User> user) {
         case 3: modifierClientInterface(hotel); break;
         case 4: supprimerClientInterface(hotel); break;
         case 5: hotel.listerClients(); break;
-        case 0: break; // Return to main menu
+        case 0: break;
     }
 }
 
@@ -256,7 +267,6 @@ void menuGestionChambres(Hotel& hotel, shared_ptr<User> user) {
     cout << "=== GESTION CHAMBRES ===" << endl;
     cout << "[1] Ajouter  [2] Rechercher (Smart)  [3] Modifier  [4] Supprimer  [5] Lister  [0] Retour" << endl;
     
-    // UPDATE: Valid options [0-5]
     int choix = InputValidator::getInt("Choix: ", 0, 5);
 
     switch(choix) {
@@ -265,7 +275,7 @@ void menuGestionChambres(Hotel& hotel, shared_ptr<User> user) {
         case 3: modifierChambreInterface(hotel); break;
         case 4: supprimerChambreInterface(hotel); break;
         case 5: hotel.listerChambres(); break;
-        case 0: break; // Return
+        case 0: break;
     }
 }
 
@@ -323,14 +333,12 @@ void menuGestionReservations(Hotel& h, shared_ptr<User> u) {
     cout << "=== GESTION RESERVATIONS ===" << endl;
     cout << "[1] Créer [2] Consulter [3] Annuler [4] Lister  [0] Retour\n";
     
-    // UPDATE: Valid options [0-4]
     int c = InputValidator::getInt("Choix: ", 0, 4);
     
     if(c==1) creerReservationInterface(h);
     else if(c==2) consulterReservationInterface(h);
     else if(c==3) annulerReservationInterface(h);
     else if(c==4) h.listerReservations();
-    // 0 automatically falls through and returns
 }
 
 void creerReservationInterface(Hotel& h) {
@@ -363,12 +371,10 @@ void menuRechercheDisponibilites(Hotel& h, shared_ptr<User> u) {
     cout << "=== DISPONIBILITÉS ===" << endl;
     cout << "[1] Voir Chambres Dispo  [2] Calculer Coût  [0] Retour\n";
     
-    // UPDATE: Valid options [0-2]
     int c = InputValidator::getInt("Choix: ", 0, 2);
     
     if(c==1) chambresDisponiblesInterface(h);
     else if(c==2) calculerCoutSejourInterface(h);
-    // 0 falls through
 }
 
 void chambresDisponiblesInterface(Hotel& h) {
@@ -394,13 +400,11 @@ void menuGestionUtilisateurs(AuthenticationManager& am, shared_ptr<User> u) {
     cout << "=== GESTION STAFF ===" << endl;
     cout << "[1] Créer Admin [2] Créer Employé [3] Lister  [0] Retour\n";
     
-    // UPDATE: Valid options [0-3]
     int c = InputValidator::getInt("Choix: ", 0, 3);
     
     if(c==1) creerAdminInterface(am, u);
     else if(c==2) creerEmployeInterface(am, u);
     else if(c==3) listerUtilisateursInterface(am, u);
-    // 0 falls through
 }
 
 void creerAdminInterface(AuthenticationManager& am, shared_ptr<User> u) {

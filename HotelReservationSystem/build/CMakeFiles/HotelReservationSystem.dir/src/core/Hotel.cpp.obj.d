@@ -177,6 +177,23 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj: \
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/ChambreSimple.h \
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/ChambreDouble.h \
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/Suite.h \
+ D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/InputValidator.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/limits \
+ D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ErrorHandler.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/fstream \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/codecvt.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/basic_file.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++io.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/fstream.tcc \
+ C:/msys64/ucrt64/include/c++/15.2.0/chrono \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/chrono.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/ratio \
+ C:/msys64/ucrt64/include/c++/15.2.0/cstdint \
+ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/stdint.h \
+ C:/msys64/ucrt64/include/stdint.h \
+ C:/msys64/ucrt64/include/c++/15.2.0/ctime \
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/parse_numbers.h \
+ D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/HotelException.h \
  C:/msys64/ucrt64/include/c++/15.2.0/algorithm \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/stl_algo.h \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/algorithmfwd.h \

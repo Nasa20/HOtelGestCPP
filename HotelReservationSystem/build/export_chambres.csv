@@ -1,0 +1,7 @@
+Numero,Type,Prix,Superficie,Statut
+101,Simple,450,20,OCCUPEE
+102,Simple,450,22,LIBRE
+201,Double,750,35,LIBRE
+202,Double,700,30,LIBRE
+301,Suite,1500,60,OCCUPEE
+302,Suite,2000,85,LIBRE

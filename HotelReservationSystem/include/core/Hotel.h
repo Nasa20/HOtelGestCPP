@@ -80,7 +80,8 @@ public:
     bool verifierDisponibilite(int numeroChambre, Date debut, Date fin) const;
     double calculerCoutSejour(int numeroChambre, Date debut, Date fin) const;
     
-    // === STATS ===
+    // === REPORTING & STATS ===
+    void exporterDonnees() const;
     int getNombreClients() const { return clients.size(); }
     int getNombreChambres() const { return chambres.size(); }
     int getNombreReservations() const { return reservations.size(); }
