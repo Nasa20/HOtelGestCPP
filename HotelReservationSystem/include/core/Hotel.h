@@ -3,9 +3,7 @@
 
 #include <vector>
 #include <memory>
-#include <fstream>
-#include <sstream>
-#include <algorithm>
+#include <sqlite3.h> // SQLITE
 #include "Client.h"
 #include "Chambre.h"
 #include "ChambreSimple.h"
@@ -27,8 +25,8 @@ private:
     shared_ptr<User> utilisateurCourant;
     int prochainIdClient;
     int prochainIdReservation;
-    
-    // Helper pour obtenir le chemin du dossier data
+    sqlite3* db; // Pointeur DB
+
     static string getDataPath() {
         #ifdef DATA_DIR
             return string(DATA_DIR) + "/";
@@ -36,14 +34,16 @@ private:
             return "data/";
         #endif
     }
-
+    
+    void initDB(); 
     void verifierPermission(bool permission, const string& action) const;
 
 public:
     Hotel(const string& nom, const string& adresse);
+    ~Hotel();
 
     void setUtilisateurCourant(shared_ptr<User> user);
-
+    
     string getNom() const { return nom; }
     string getAdresse() const { return adresse; }
     int getNombreClients() const { return clients.size(); }
@@ -51,8 +51,7 @@ public:
     int getNombreReservations() const { return reservations.size(); }
 
     // CRUD Clients
-    void ajouterClient(const string& nom, const string& prenom,
-                      const string& email, const string& telephone);
+    void ajouterClient(const string& nom, const string& prenom, const string& email, const string& telephone);
     shared_ptr<Client> rechercherClient(int id) const;
     vector<shared_ptr<Client>> rechercherClientParNom(const string& nom) const;
     void modifierClient(int id, const string& email, const string& telephone);
@@ -67,7 +66,7 @@ public:
     void listerChambres() const;
     void listerChambresParType(const string& type) const;
 
-    // Gestion des réservations
+    // Réservations
     void creerReservation(int idClient, int numeroChambre, Date debut, Date fin);
     void annulerReservation(int idReservation);
     void listerReservations() const;
@@ -80,22 +79,14 @@ public:
     bool verifierDisponibilite(int numeroChambre, Date debut, Date fin) const;
     double calculerCoutSejour(int numeroChambre, Date debut, Date fin) const;
 
-    // Statistiques
+    // Stats
     void afficherStatistiques() const;
     double calculerTauxOccupation() const;
     double calculerRevenusTotal() const;
 
-    // Persistance (SANS PARAMÈTRES)
-    void sauvegarderDonnees() const;
+    // Persistence
     void chargerDonnees();
-
-private:
-    void sauvegarderClients(const string& fichier) const;
-    void sauvegarderChambres(const string& fichier) const;
-    void sauvegarderReservations(const string& fichier) const;
-    void chargerClients(const string& fichier);
-    void chargerChambres(const string& fichier);
-    void chargerReservations(const string& fichier);
+    void sauvegarderDonnees() const {} // Vide
 };
 
 #endif

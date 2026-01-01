@@ -29,7 +29,8 @@ public:
     // Méthodes utilitaires
     bool estValide() const;
     int differenceEnJours(const Date& autre) const;
-    string toString() const;
+    string toString() const;     // Format: DD/MM/YYYY (Affichage)
+    string toSQLString() const;  // Format: YYYY-MM-DD (Base de données)
     
     // Opérateurs de comparaison
     bool operator<(const Date& autre) const;
@@ -39,7 +40,7 @@ public:
     bool operator>=(const Date& autre) const;
     bool operator!=(const Date& autre) const;
     
-    // Surcharge de 
+    // Surcharge de <<
     friend ostream& operator<<(ostream& os, const Date& date);
 };
 

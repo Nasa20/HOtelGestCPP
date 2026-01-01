@@ -3,20 +3,19 @@ project(HotelReservationSystem)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Définir le chemin absolu du dossier data dans la racine du projet
+# 1. Trouver SQLite3
+find_package(SQLite3 REQUIRED)
+
+# Définir le chemin absolu du dossier data
 set(DATA_DIR "${CMAKE_SOURCE_DIR}/data")
-
-# Passer DATA_DIR comme définition au compilateur
 add_compile_definitions(DATA_DIR="${DATA_DIR}")
-
-# Créer le dossier data dans la racine du projet s'il n'existe pas
 file(MAKE_DIRECTORY ${DATA_DIR})
 
-# Inclure les répertoires de headers
+# Inclure les headers
 include_directories(include/core)
 include_directories(include/auth)
+include_directories(${SQLite3_INCLUDE_DIRS}) # Include SQLite
 
-# Fichiers sources Core
 set(CORE_SOURCES
         src/core/Date.cpp
         src/core/Client.cpp
@@ -29,7 +28,6 @@ set(CORE_SOURCES
         src/core/Hotel.cpp
 )
 
-# Fichiers sources Auth
 set(AUTH_SOURCES
         src/auth/User.cpp
         src/auth/Admin.cpp
@@ -37,12 +35,13 @@ set(AUTH_SOURCES
         src/auth/AuthenticationManager.cpp
 )
 
-# Créer l'exécutable
 add_executable(HotelReservationSystem
         src/main.cpp
         ${CORE_SOURCES}
         ${AUTH_SOURCES}
 )
 
-# Afficher un message pour confirmer le chemin
+# 2. Lier la librairie SQLite
+target_link_libraries(HotelReservationSystem PRIVATE SQLite::SQLite3)
+
 message(STATUS "Dossier data configuré: ${DATA_DIR}")

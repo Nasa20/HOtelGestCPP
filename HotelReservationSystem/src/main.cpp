@@ -3,6 +3,12 @@
 #include <memory>
 #include <iomanip>
 
+// === FIX FOR WINDOWS CONSOLE ENCODING ===
+#ifdef _WIN32
+#include <windows.h>
+#endif
+// ========================================
+
 // Core
 #include "Date.h"
 #include "Client.h"
@@ -23,6 +29,7 @@
 using namespace std;
 
 // ==================== PROTOTYPES ====================
+void setupConsole(); // <--- Prototype for the fix
 void pauseConsole();
 void clearConsole();
 void afficherBanniere();
@@ -58,8 +65,20 @@ void creerAdminInterface(AuthenticationManager& authManager, shared_ptr<User> us
 void creerEmployeInterface(AuthenticationManager& authManager, shared_ptr<User> user);
 void listerUtilisateursInterface(AuthenticationManager& authManager, shared_ptr<User> user);
 
+// ==================== CONSOLE SETUP (FIX) ====================
+void setupConsole() {
+    #ifdef _WIN32
+        // Force Standard Output to UTF-8
+        SetConsoleOutputCP(65001); 
+        // Force Standard Input to UTF-8
+        SetConsoleCP(65001);       
+    #endif
+}
+
 // ==================== MAIN ====================
 int main() {
+    setupConsole(); // <--- APPLIES THE FIX IMMEDIATELY
+
     try {
         Hotel hotel("Le Grand Palace", "Boulevard Mohammed V, Casablanca");
         AuthenticationManager authManager;
@@ -73,31 +92,18 @@ int main() {
             cout << "📁 Dossier de données: data/" << endl;
         #endif
 
-        cout << "\n🔄 Chargement des données..." << endl;
+        cout << "\n🔄 Connexion à la base de données..." << endl;
 
-        bool premiereExecution = false;
-        try {
-            authManager.chargerUtilisateurs();
-            hotel.chargerDonnees();
-            cout << "✅ Données chargées avec succès!" << endl;
-            cout << "   • Clients: " << hotel.getNombreClients() << endl;
-            cout << "   • Chambres: " << hotel.getNombreChambres() << endl;
-            cout << "   • Réservations: " << hotel.getNombreReservations() << endl;
-        } catch (...) {
-            cout << "⚠️  Première exécution détectée." << endl;
-            cout << "📝 Création de l'administrateur par défaut..." << endl;
-            authManager.creerAdminParDefaut();
+        // Chargement des données (via SQL)
+        authManager.chargerUtilisateurs();
+        hotel.chargerDonnees();
 
-            authManager.sauvegarderUtilisateurs();
-
-            cout << "\n✅ Administrateur créé avec succès!" << endl;
-            cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << endl;
-            cout << "   Username : admin" << endl;
-            cout << "   Password : admin123" << endl;
-            cout << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << endl;
-
-            premiereExecution = true;
-        }
+        cout << "✅ Base de données chargée avec succès!" << endl;
+        cout << "   • Clients: " << hotel.getNombreClients() << endl;
+        cout << "   • Chambres: " << hotel.getNombreChambres() << endl;
+        cout << "   • Réservations: " << hotel.getNombreReservations() << endl;
+        
+        cout << "\nℹ️  Admin par défaut: admin / admin123" << endl;
 
         pauseConsole();
         clearConsole();
@@ -116,20 +122,8 @@ int main() {
             pauseConsole();
             clearConsole();
         }
-
-        cout << "\n💾 Sauvegarde automatique des données..." << endl;
-        try {
-            authManager.sauvegarderUtilisateurs();
-            hotel.sauvegarderDonnees();
-            cout << "✅ Toutes les données ont été sauvegardées dans:" << endl;
-            #ifdef DATA_DIR
-                cout << "   " << DATA_DIR << "/" << endl;
-            #else
-                cout << "   data/" << endl;
-            #endif
-        } catch (const exception& e) {
-            cerr << "❌ Erreur lors de la sauvegarde: " << e.what() << endl;
-        }
+        
+        cout << "\n✅ Données sécurisées dans la base de données." << endl;
 
     } catch (const exception& e) {
         cerr << "\n💥 ERREUR FATALE: " << e.what() << "\n" << endl;
@@ -157,7 +151,7 @@ void clearConsole() {
 
 void afficherBanniere() {
     cout << "╔════════════════════════════════════════════════╗" << endl;
-    cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v1.0         ║" << endl;
+    cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v2.0 (SQL)   ║" << endl;
     cout << "║        Hôtel Le Grand Palace                  ║" << endl;
     cout << "║          Casablanca, Maroc                    ║" << endl;
     cout << "╚════════════════════════════════════════════════╝" << endl;
@@ -229,7 +223,6 @@ void afficherMenuPrincipal(shared_ptr<User> user) {
     }
 
     cout << "│  [7] 👤 Mon Profil                      │" << endl;
-    cout << "│  [8] 💾 Sauvegarder                     │" << endl;
     cout << "│  [0] 🚪 Déconnexion                     │" << endl;
     cout << "└─────────────────────────────────────────┘" << endl;
     cout << "Choix: ";
@@ -263,19 +256,6 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
                     }
                     break;
                 case 7: menuProfil(user, authManager); break;
-                case 8:
-                    cout << "💾 Sauvegarde en cours..." << endl;
-                    authManager.sauvegarderUtilisateurs();
-                    hotel.sauvegarderDonnees();
-                    cout << "✅ Données sauvegardées dans:" << endl;
-                    #ifdef DATA_DIR
-                        cout << "   " << DATA_DIR << "/" << endl;
-                    #else
-                        cout << "   data/" << endl;
-                    #endif
-                    pauseConsole();
-                    clearConsole();
-                    break;
                 case 0: break;
                 default:
                     cout << "❌ Choix invalide!" << endl;

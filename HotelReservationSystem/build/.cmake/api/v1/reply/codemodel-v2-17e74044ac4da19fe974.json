@@ -1,0 +1,78 @@
+{
+	"configurations" : 
+	[
+		{
+			"abstractTargets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "SQLite::SQLite3::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-SQLite__SQLite3-Debug-73eb2d55d14baf8d9439.json",
+					"name" : "SQLite::SQLite3",
+					"projectIndex" : 0
+				}
+			],
+			"directories" : 
+			[
+				{
+					"abstractTargetIndexes" : 
+					[
+						0
+					],
+					"build" : ".",
+					"jsonFile" : "directory-.-Debug-f6f22219c74102c3da70.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.10"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"name" : "Debug",
+			"projects" : 
+			[
+				{
+					"abstractTargetIndexes" : 
+					[
+						0
+					],
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "HotelReservationSystem",
+					"targetIndexes" : 
+					[
+						0
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "HotelReservationSystem::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-HotelReservationSystem-Debug-28e823ca8bbb4b74b36e.json",
+					"name" : "HotelReservationSystem",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+		"source" : "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 9
+	}
+}

@@ -3,8 +3,8 @@
 
 #include <vector>
 #include <memory>
-#include <fstream>
-#include <sstream>
+#include <string>
+#include <sqlite3.h> // SQLITE
 #include "User.h"
 #include "Admin.h"
 #include "Employe.h"
@@ -17,6 +17,7 @@ private:
     vector<shared_ptr<User>> utilisateurs;
     shared_ptr<User> utilisateurConnecte;
     int prochainId;
+    sqlite3* db; // Pointeur DB
 
     static string getDataPath() {
         #ifdef DATA_DIR
@@ -25,9 +26,12 @@ private:
             return "data/";
         #endif
     }
+    
+    void initDB(); // Init Tables
 
 public:
     AuthenticationManager();
+    ~AuthenticationManager(); // Destructeur pour fermer la DB
 
     shared_ptr<User> login(const string& username, const string& password);
     void logout();
@@ -45,6 +49,7 @@ public:
     bool usernameDisponible(const string& username) const;
     shared_ptr<User> rechercherUtilisateur(int id) const;
     shared_ptr<User> rechercherParUsername(const string& username) const;
+    
     void modifierUtilisateur(int id, const string& email, shared_ptr<User> modificateur);
     void supprimerUtilisateur(int id, shared_ptr<User> suppresseur);
     vector<shared_ptr<User>> listerUtilisateurs(shared_ptr<User> demandeur) const;
@@ -54,10 +59,10 @@ public:
     void reinitialiserMotDePasse(int userId, const string& nouveauPass,
                                  shared_ptr<User> initiateur);
 
-    // Persistance (SANS PARAMÈTRES)
-    void sauvegarderUtilisateurs() const;
+    // Persistence SQL
     void chargerUtilisateurs();
-
+    void sauvegarderUtilisateurs() const {} // Vide (obsolète)
+    
     void creerAdminParDefaut();
 };
 

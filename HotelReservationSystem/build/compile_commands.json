@@ -1,0 +1,86 @@
+[
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\main.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\main.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/main.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/main.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\Date.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\Date.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/Date.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/Date.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\Client.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\Client.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/Client.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/Client.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\HotelException.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\HotelException.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/HotelException.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/HotelException.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\Chambre.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\Chambre.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/Chambre.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/Chambre.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\ChambreSimple.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\ChambreSimple.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/ChambreSimple.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/ChambreSimple.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\ChambreDouble.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\ChambreDouble.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/ChambreDouble.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/ChambreDouble.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\Suite.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\Suite.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/Suite.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/Suite.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\Reservation.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\Reservation.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/Reservation.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/Reservation.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\core\\Hotel.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\core\\Hotel.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/Hotel.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\auth\\User.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\auth\\User.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/auth/User.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/auth/User.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\auth\\Admin.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\auth\\Admin.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/auth/Admin.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/auth/Admin.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\auth\\Employe.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\auth\\Employe.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/auth/Employe.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/auth/Employe.cpp.obj"
+},
+{
+  "directory": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/build",
+  "command": "C:\\msys64\\ucrt64\\bin\\g++.exe -DDATA_DIR=\\\"D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/data\\\" @CMakeFiles/HotelReservationSystem.dir/includes_CXX.rsp -g -std=gnu++17 -o CMakeFiles\\HotelReservationSystem.dir\\src\\auth\\AuthenticationManager.cpp.obj -c D:\\EMSI\\C++\\Projects\\HOtelGestCPP\\HotelReservationSystem\\src\\auth\\AuthenticationManager.cpp",
+  "file": "D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/auth/AuthenticationManager.cpp",
+  "output": "CMakeFiles/HotelReservationSystem.dir/src/auth/AuthenticationManager.cpp.obj"
+}
+]
