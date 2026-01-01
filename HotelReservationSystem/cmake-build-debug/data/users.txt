@@ -1,0 +1,1 @@
+1|admin|admin123|Administrateur|Système|admin@hotel.com|ADMIN|1
