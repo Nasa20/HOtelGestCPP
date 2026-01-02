@@ -1530,6 +1530,8 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/include/c++/15.2.0/bits/basic_string.tcc
  C:/msys64/ucrt64/include/c++/15.2.0/bits/char_traits.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/charconv.h
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/chrono.h
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/codecvt.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/concept_check.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/cpp_type_traits.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/cxxabi_forced.h
@@ -1537,6 +1539,7 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/include/c++/15.2.0/bits/exception.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/exception_defines.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/exception_ptr.h
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/fstream.tcc
  C:/msys64/ucrt64/include/c++/15.2.0/bits/functexcept.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/functional_hash.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/hash_bytes.h
@@ -1556,6 +1559,7 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/include/c++/15.2.0/bits/ostream.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/ostream.tcc
  C:/msys64/ucrt64/include/c++/15.2.0/bits/ostream_insert.h
+ C:/msys64/ucrt64/include/c++/15.2.0/bits/parse_numbers.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/postypes.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/predefined_ops.h
  C:/msys64/ucrt64/include/c++/15.2.0/bits/ptr_traits.h
@@ -1593,11 +1597,14 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/include/c++/15.2.0/bits/version.h
  C:/msys64/ucrt64/include/c++/15.2.0/cctype
  C:/msys64/ucrt64/include/c++/15.2.0/cerrno
+ C:/msys64/ucrt64/include/c++/15.2.0/chrono
  C:/msys64/ucrt64/include/c++/15.2.0/clocale
  C:/msys64/ucrt64/include/c++/15.2.0/concepts
  C:/msys64/ucrt64/include/c++/15.2.0/cstddef
+ C:/msys64/ucrt64/include/c++/15.2.0/cstdint
  C:/msys64/ucrt64/include/c++/15.2.0/cstdio
  C:/msys64/ucrt64/include/c++/15.2.0/cstdlib
+ C:/msys64/ucrt64/include/c++/15.2.0/ctime
  C:/msys64/ucrt64/include/c++/15.2.0/cwchar
  C:/msys64/ucrt64/include/c++/15.2.0/cwctype
  C:/msys64/ucrt64/include/c++/15.2.0/debug/assertions.h
@@ -1610,11 +1617,13 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/include/c++/15.2.0/ext/numeric_traits.h
  C:/msys64/ucrt64/include/c++/15.2.0/ext/string_conversions.h
  C:/msys64/ucrt64/include/c++/15.2.0/ext/type_traits.h
+ C:/msys64/ucrt64/include/c++/15.2.0/fstream
  C:/msys64/ucrt64/include/c++/15.2.0/initializer_list
  C:/msys64/ucrt64/include/c++/15.2.0/ios
  C:/msys64/ucrt64/include/c++/15.2.0/iosfwd
  C:/msys64/ucrt64/include/c++/15.2.0/iostream
  C:/msys64/ucrt64/include/c++/15.2.0/istream
+ C:/msys64/ucrt64/include/c++/15.2.0/limits
  C:/msys64/ucrt64/include/c++/15.2.0/memory
  C:/msys64/ucrt64/include/c++/15.2.0/new
  C:/msys64/ucrt64/include/c++/15.2.0/ostream
@@ -1622,6 +1631,7 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/include/c++/15.2.0/pstl/glue_algorithm_defs.h
  C:/msys64/ucrt64/include/c++/15.2.0/pstl/glue_memory_defs.h
  C:/msys64/ucrt64/include/c++/15.2.0/pstl/pstl_config.h
+ C:/msys64/ucrt64/include/c++/15.2.0/ratio
  C:/msys64/ucrt64/include/c++/15.2.0/stdexcept
  C:/msys64/ucrt64/include/c++/15.2.0/stdlib.h
  C:/msys64/ucrt64/include/c++/15.2.0/streambuf
@@ -1633,8 +1643,10 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/include/c++/15.2.0/typeinfo
  C:/msys64/ucrt64/include/c++/15.2.0/vector
  C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/atomic_word.h
+ C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/basic_file.h
  C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++allocator.h
  C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++config.h
+ C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++io.h
  C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/c++locale.h
  C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/cpu_defines.h
  C:/msys64/ucrt64/include/c++/15.2.0/x86_64-w64-mingw32/bits/ctype_base.h
@@ -1670,6 +1682,7 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/include/sqlite3.h
  C:/msys64/ucrt64/include/stdarg.h
  C:/msys64/ucrt64/include/stddef.h
+ C:/msys64/ucrt64/include/stdint.h
  C:/msys64/ucrt64/include/stdio.h
  C:/msys64/ucrt64/include/stdlib.h
  C:/msys64/ucrt64/include/swprintf.inl
@@ -1683,6 +1696,7 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/mm_malloc.h
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/stdarg.h
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/stddef.h
+ C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/stdint.h
  C:/msys64/ucrt64/lib/gcc/x86_64-w64-mingw32/15.2.0/include/syslimits.h
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/auth/User.h
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/Chambre.h
@@ -1694,6 +1708,8 @@ CMakeFiles/HotelReservationSystem.dir/src/core/Hotel.cpp.obj
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/HotelException.h
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/Reservation.h
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/Suite.h
+ D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ErrorHandler.h
+ D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/InputValidator.h
 
 CMakeFiles/HotelReservationSystem.dir/src/core/HotelException.cpp.obj
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/src/core/HotelException.cpp

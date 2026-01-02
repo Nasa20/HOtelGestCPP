@@ -137,7 +137,7 @@ void clearConsole() {
 void afficherBanniere() {
     cout << "╔════════════════════════════════════════════════╗" << endl;
     cout << "║   SYSTÈME DE RÉSERVATION HÔTEL - v3.0 (Exp)    ║" << endl;
-    cout << "║        Hôtel Le Grand Palace                  ║" << endl;
+    cout << "║        Hôtel Le Grand Palace                   ║" << endl;
     cout << "╚════════════════════════════════════════════════╝" << endl;
 }
 
@@ -170,13 +170,11 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
         cout << "[3] 📋 Réservations" << endl;
         cout << "[4] 🔍 Disponibilités" << endl;
         cout << "[5] 📊 Statistiques" << endl;
-        cout << "[6] 👨‍💼 Personnel" << endl;
-        
-        // UPDATE: Show option [7] only for Admins
+
         if (user->peutExporterDonnees()) {
+            cout << "[6] 👨‍💼 Personnel (Admin)" << endl;
             cout << "[7] 📥 Exporter Données (Admin)" << endl;
         }
-
         cout << "[0] 🚪 Quitter" << endl;
         
         // Allow up to option 7
