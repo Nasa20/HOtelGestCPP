@@ -439,4 +439,5 @@ CMakeFiles/HotelReservationSystem.dir/src/main.cpp.obj: \
  C:/msys64/ucrt64/include/c++/15.2.0/bits/fstream.tcc \
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/HotelException.h \
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/InputValidator.h \
- D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ErrorHandler.h
+ D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ErrorHandler.h \
+ D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ConsoleUtils.h

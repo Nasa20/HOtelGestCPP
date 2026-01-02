@@ -2612,6 +2612,7 @@ CMakeFiles/HotelReservationSystem.dir/src/main.cpp.obj: D:/EMSI/C++/Projects/HOt
   D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/HotelException.h \
   D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/Reservation.h \
   D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/Suite.h \
+  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ConsoleUtils.h \
   D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ErrorHandler.h \
   D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/InputValidator.h
 
@@ -3319,6 +3320,8 @@ C:/msys64/ucrt64/include/_mingw_secapi.h:
 C:/msys64/ucrt64/include/ole2.h:
 
 C:/msys64/ucrt64/include/math.h:
+
+D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ConsoleUtils.h:
 
 D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/utils/ErrorHandler.h:
 
