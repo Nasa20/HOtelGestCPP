@@ -390,7 +390,8 @@ CMakeFiles/HotelReservationSystem.dir/src/main.cpp.obj: \
  C:/msys64/ucrt64/include/stralign.h \
  C:/msys64/ucrt64/include/sec_api/stralign_s.h \
  C:/msys64/ucrt64/include/winsvc.h C:/msys64/ucrt64/include/mcx.h \
- C:/msys64/ucrt64/include/imm.h \
+ C:/msys64/ucrt64/include/imm.h C:/msys64/ucrt64/include/conio.h \
+ C:/msys64/ucrt64/include/sec_api/conio_s.h \
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/Date.h \
  D:/EMSI/C++/Projects/HOtelGestCPP/HotelReservationSystem/include/core/Client.h \
  C:/msys64/ucrt64/include/c++/15.2.0/vector \

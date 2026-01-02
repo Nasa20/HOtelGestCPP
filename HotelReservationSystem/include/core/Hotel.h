@@ -47,7 +47,7 @@ public:
     ~Hotel();
 
     // === SETUP & DATA ===
-    void seedData(); // <--- NEW: Populates DB if empty
+    void seedData(); 
     void chargerDonnees();
     void setUtilisateurCourant(shared_ptr<User> user);
     void verifierPermission(bool permission, const string& action) const;
@@ -58,7 +58,7 @@ public:
     void supprimerClient(int id);
     shared_ptr<Client> rechercherClient(int id) const;
     
-    // <--- NEW: Smart Search Client (Name, Email, Phone, ID)
+    // Smart Search Client (Name, Email, Phone, ID)
     vector<shared_ptr<Client>> rechercherClientsSmart(const string& keyword) const;
 
     // === CRUD CHAMBRES ===
@@ -67,13 +67,15 @@ public:
     void supprimerChambre(int numero);
     shared_ptr<Chambre> rechercherChambre(int numero) const;
 
-    // <--- NEW: Smart Search Room (Type, Price, Status, Number)
+    // Smart Search Room (Type, Price, Status, Number)
     vector<shared_ptr<Chambre>> rechercherChambresSmart(const string& keyword) const;
 
     // === RESERVATIONS ===
     void creerReservation(int idClient, int numeroChambre, Date debut, Date fin);
     void annulerReservation(int idReservation);
     shared_ptr<Reservation> rechercherReservation(int id) const;
+    void genererFacture(int idReservation) const; 
+    void exporterFacture(int idReservation) const; // <--- NEW METHOD DECLARATION
     
     // === HELPERS ===
     vector<shared_ptr<Chambre>> chambresDisponibles(Date debut, Date fin) const;

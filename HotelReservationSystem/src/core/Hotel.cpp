@@ -2,10 +2,11 @@
 #include "../../include/core/ChambreSimple.h"
 #include "../../include/core/ChambreDouble.h"
 #include "../../include/core/Suite.h"
-#include "../../include/utils/InputValidator.h" // Needed for the sub-menu
+#include "../../include/utils/InputValidator.h" 
 #include <iostream>
-#include <fstream>   // Needed for file writing
+#include <fstream>   
 #include <algorithm>
+#include <iomanip>
 
 // Helper for case-insensitive search
 string toLower(const string& str) {
@@ -59,8 +60,6 @@ void Hotel::verifierPermission(bool permission, const string& action) const {
     if (!utilisateurCourant) throw PermissionException("Non connecté");
     if (!permission) throw PermissionException(action);
 }
-
-// ... [Keep chargerDonnees, search methods, and CRUD implementations as they were] ...
 
 void Hotel::chargerDonnees() {
     clients.clear();
@@ -141,9 +140,8 @@ void Hotel::chargerDonnees() {
     sqlite3_finalize(stmt);
 }
 
-// === NEW: EXPORT DATA IMPLEMENTATION ===
+// === EXPORT DATA IMPLEMENTATION ===
 void Hotel::exporterDonnees() const {
-    // 1. Security Check
     verifierPermission(utilisateurCourant->peutExporterDonnees(), "Seul l'administrateur peut exporter les données.");
 
     cout << "\n=== 📥 EXPORTATION CSV ===" << endl;
@@ -156,7 +154,6 @@ void Hotel::exporterDonnees() const {
     int choix = InputValidator::getInt("Choix: ", 0, 4);
     if (choix == 0) return;
 
-    // Export Clients
     if (choix == 1 || choix == 4) {
         ofstream f("export_clients.csv");
         if (f.is_open()) {
@@ -170,7 +167,6 @@ void Hotel::exporterDonnees() const {
         } else cerr << "❌ Erreur création fichier clients." << endl;
     }
 
-    // Export Chambres
     if (choix == 2 || choix == 4) {
         ofstream f("export_chambres.csv");
         if (f.is_open()) {
@@ -184,7 +180,6 @@ void Hotel::exporterDonnees() const {
         } else cerr << "❌ Erreur création fichier chambres." << endl;
     }
 
-    // Export Reservations
     if (choix == 3 || choix == 4) {
         ofstream f("export_reservations.csv");
         if (f.is_open()) {
@@ -200,8 +195,6 @@ void Hotel::exporterDonnees() const {
         } else cerr << "❌ Erreur création fichier réservations." << endl;
     }
 }
-
-// === STANDARD CRUD (Shortened for brevity, keep your original implementation) ===
 
 vector<shared_ptr<Client>> Hotel::rechercherClientsSmart(const string& keyword) const {
     vector<shared_ptr<Client>> resultats;
@@ -337,6 +330,83 @@ void Hotel::annulerReservation(int idReservation) {
     char* sqlRoom = sqlite3_mprintf("UPDATE Chambres SET occupee=0 WHERE numero=%d;", reservation->getChambre()->getNumero());
     sqlite3_exec(db, sqlRoom, 0, 0, 0);
     sqlite3_free(sqlRoom);
+}
+
+// === INVOICE GENERATION (PRINT TO CONSOLE) ===
+void Hotel::genererFacture(int idReservation) const {
+    auto res = rechercherReservation(idReservation);
+    if (!res) throw ReservationInvalideException("Réservation introuvable");
+
+    auto client = res->getClient();
+    auto chambre = res->getChambre();
+
+    cout << "\n";
+    cout << "╔══════════════════════════════════════════════════════╗" << endl;
+    cout << "║                  FACTURE DE SÉJOUR                   ║" << endl;
+    cout << "╠══════════════════════════════════════════════════════╣" << endl;
+    cout << "║ " << left << setw(52) << ("🏨 " + nom) << " ║" << endl;
+    cout << "║ " << left << setw(52) << ("📍 " + adresse) << " ║" << endl;
+    cout << "╠══════════════════════════════════════════════════════╣" << endl;
+    cout << "║ DATE: " << left << setw(44) << "Aujourd'hui" << " ║" << endl; 
+    cout << "║ FACTURE #: " << left << setw(39) << (to_string(res->getId()) + "/2025") << " ║" << endl;
+    cout << "╠══════════════════════════════════════════════════════╣" << endl;
+    cout << "║ CLIENT:                                              ║" << endl;
+    cout << "║   " << left << setw(48) << (client->getNom() + " " + client->getPrenom()) << " ║" << endl;
+    cout << "║   " << left << setw(48) << client->getEmail() << " ║" << endl;
+    cout << "╠══════════════════════════════════════════════════════╣" << endl;
+    cout << "║ DÉTAILS SÉJOUR:                                      ║" << endl;
+    cout << "║   Chambre: " << left << setw(39) << (to_string(chambre->getNumero()) + " (" + chambre->getType() + ")") << " ║" << endl;
+    cout << "║   Arrivée: " << left << setw(39) << res->getDateDebut().toString() << " ║" << endl;
+    cout << "║   Départ : " << left << setw(39) << res->getDateFin().toString() << " ║" << endl;
+    cout << "║   Nuitées: " << left << setw(39) << to_string(res->calculerNombreNuits()) << " ║" << endl;
+    cout << "╠══════════════════════════════════════════════════════╣" << endl;
+    cout << "║ TOTAL À PAYER:                         " << right << setw(10) << fixed << setprecision(2) << res->getCoutTotal() << " DH ║" << endl;
+    cout << "║ Statut: " << left << setw(42) << res->getStatutString() << " ║" << endl;
+    cout << "╚══════════════════════════════════════════════════════╝" << endl;
+    cout << endl;
+}
+
+// === NEW: EXPORT INVOICE (SAVE TO FILE) ===
+void Hotel::exporterFacture(int idReservation) const {
+    auto res = rechercherReservation(idReservation);
+    if (!res) throw ReservationInvalideException("Réservation introuvable");
+
+    string filename = "facture_" + to_string(idReservation) + ".txt";
+    ofstream f(filename);
+    
+    if (!f.is_open()) {
+         cerr << "Erreur lors de la création du fichier '" << filename << "'." << endl;
+         return;
+    }
+
+    auto client = res->getClient();
+    auto chambre = res->getChambre();
+
+    f << "╔══════════════════════════════════════════════════════╗" << endl;
+    f << "║                  FACTURE DE SÉJOUR                   ║" << endl;
+    f << "╠══════════════════════════════════════════════════════╣" << endl;
+    f << "║ " << left << setw(52) << ("🏨 " + nom) << " ║" << endl;
+    f << "║ " << left << setw(52) << ("📍 " + adresse) << " ║" << endl;
+    f << "╠══════════════════════════════════════════════════════╣" << endl;
+    f << "║ DATE: " << left << setw(44) << "Aujourd'hui" << " ║" << endl; 
+    f << "║ FACTURE #: " << left << setw(39) << (to_string(res->getId()) + "/2025") << " ║" << endl;
+    f << "╠══════════════════════════════════════════════════════╣" << endl;
+    f << "║ CLIENT:                                              ║" << endl;
+    f << "║   " << left << setw(48) << (client->getNom() + " " + client->getPrenom()) << " ║" << endl;
+    f << "║   " << left << setw(48) << client->getEmail() << " ║" << endl;
+    f << "╠══════════════════════════════════════════════════════╣" << endl;
+    f << "║ DÉTAILS SÉJOUR:                                      ║" << endl;
+    f << "║   Chambre: " << left << setw(39) << (to_string(chambre->getNumero()) + " (" + chambre->getType() + ")") << " ║" << endl;
+    f << "║   Arrivée: " << left << setw(39) << res->getDateDebut().toString() << " ║" << endl;
+    f << "║   Départ : " << left << setw(39) << res->getDateFin().toString() << " ║" << endl;
+    f << "║   Nuitées: " << left << setw(39) << to_string(res->calculerNombreNuits()) << " ║" << endl;
+    f << "╠══════════════════════════════════════════════════════╣" << endl;
+    f << "║ TOTAL À PAYER:                         " << right << setw(10) << fixed << setprecision(2) << res->getCoutTotal() << " DH ║" << endl;
+    f << "║ Statut: " << left << setw(42) << res->getStatutString() << " ║" << endl;
+    f << "╚══════════════════════════════════════════════════════╝" << endl;
+    
+    f.close();
+    cout << "✅ Facture exportée avec succès vers '" << filename << "'." << endl;
 }
 
 shared_ptr<Client> Hotel::rechercherClient(int id) const { for (const auto& c : clients) if (c->getId() == id) return c; return nullptr; }

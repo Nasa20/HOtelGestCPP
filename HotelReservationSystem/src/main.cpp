@@ -3,9 +3,13 @@
 #include <memory>
 #include <iomanip>
 
-// Windows Encoding Fix
+// Windows Encoding Fix & Password Masking
 #ifdef _WIN32
 #include <windows.h>
+#include <conio.h> // For _getch()
+#else
+#include <termios.h>
+#include <unistd.h>
 #endif
 
 // Core Includes
@@ -58,6 +62,8 @@ void supprimerChambreInterface(Hotel& hotel);
 void creerReservationInterface(Hotel& hotel);
 void annulerReservationInterface(Hotel& hotel);
 void consulterReservationInterface(Hotel& hotel);
+void imprimerFactureInterface(Hotel& hotel); 
+void exporterFactureInterface(Hotel& hotel); // <--- NEW PROTOTYPE
 
 void chambresDisponiblesInterface(Hotel& hotel);
 void calculerCoutSejourInterface(Hotel& hotel);
@@ -71,6 +77,38 @@ void setupConsole() {
         SetConsoleOutputCP(65001); 
         SetConsoleCP(65001);       
     #endif
+}
+
+// === HELPER FOR PASSWORD ===
+string getHiddenPassword() {
+    string password = "";
+    #ifdef _WIN32
+        char ch;
+        while(true) {
+            ch = _getch();
+            if (ch == 13) { // Enter key
+                break;
+            } else if (ch == 8) { // Backspace
+                if (password.length() > 0) {
+                    cout << "\b \b";
+                    password.pop_back();
+                }
+            } else {
+                password += ch;
+                cout << '*';
+            }
+        }
+    #else
+        struct termios oldt, newt;
+        tcgetattr(STDIN_FILENO, &oldt);
+        newt = oldt;
+        newt.c_lflag &= ~ECHO;
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+        getline(cin, password);
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    #endif
+    cout << endl;
+    return password;
 }
 
 int main() {
@@ -122,7 +160,6 @@ int main() {
 // ==================== MENU LOGIC ====================
 
 shared_ptr<User> ecranConnexion(AuthenticationManager& authManager) {
-    // Re-show banner for the login screen to keep it "great and stylish"
     ConsoleUtils::printWelcomeBanner();
     
     string username, password;
@@ -135,7 +172,7 @@ shared_ptr<User> ecranConnexion(AuthenticationManager& authManager) {
         if (username == "q") return nullptr;
         
         cout << "   🔒 " << ConsoleUtils::BOLD << "Mot de passe" << ConsoleUtils::RESET << ": "; 
-        getline(cin, password);
+        password = getHiddenPassword();
         
         try {
             auto user = authManager.login(username, password);
@@ -154,12 +191,10 @@ void menuPrincipal(Hotel& hotel, AuthenticationManager& authManager, shared_ptr<
     do {
         ConsoleUtils::printHeader("MENU PRINCIPAL");
 
-        // === LOGIC TO DISPLAY ROLE OR EMPLOYEE POST ===
         string roleDisplay;
         if (user->getRole() == User::ADMIN) {
             roleDisplay = "Administrateur";
         } else {
-            // It is an employee, try to cast to get the 'Poste'
             auto emp = dynamic_pointer_cast<Employe>(user);
             if (emp) {
                 roleDisplay = "Employé (" + emp->getPoste() + ")";
@@ -375,16 +410,20 @@ void menuGestionReservations(Hotel& h, shared_ptr<User> u) {
     ConsoleUtils::printMenuOption(2, "Consulter Détails");
     ConsoleUtils::printMenuOption(3, "Annuler Réservation");
     ConsoleUtils::printMenuOption(4, "Liste Complète");
+    ConsoleUtils::printMenuOption(5, "🖨️  Imprimer Facture");
+    ConsoleUtils::printMenuOption(6, "💾 Exporter Facture"); // <--- NEW OPTION
     cout << endl;
     ConsoleUtils::printMenuOption(0, "Retour");
     
-    int c = InputValidator::getInt("\n   👉 Choix: ", 0, 4);
+    int c = InputValidator::getInt("\n   👉 Choix: ", 0, 6);
     ConsoleUtils::clear();
     
     if(c==1) creerReservationInterface(h);
     else if(c==2) consulterReservationInterface(h);
     else if(c==3) annulerReservationInterface(h);
     else if(c==4) h.listerReservations();
+    else if(c==5) imprimerFactureInterface(h);
+    else if(c==6) exporterFactureInterface(h); // <--- NEW CALL
 }
 
 void creerReservationInterface(Hotel& h) {
@@ -413,6 +452,27 @@ void annulerReservationInterface(Hotel& h) {
     if(InputValidator::getConfirmation("   ⚠️ Annuler cette réservation ?")) {
         h.annulerReservation(id);
         ConsoleUtils::printSuccess("Réservation annulée.");
+    }
+}
+
+void imprimerFactureInterface(Hotel& h) {
+    ConsoleUtils::printSubHeader("Imprimer Facture");
+    int id = InputValidator::getInt("   ID Réservation: ");
+    try {
+        h.genererFacture(id);
+    } catch (const exception& e) {
+        ConsoleUtils::printError(e.what());
+    }
+}
+
+// === NEW INTERFACE FUNCTION ===
+void exporterFactureInterface(Hotel& h) {
+    ConsoleUtils::printSubHeader("Exporter Facture");
+    int id = InputValidator::getInt("   ID Réservation: ");
+    try {
+        h.exporterFacture(id);
+    } catch (const exception& e) {
+        ConsoleUtils::printError(e.what());
     }
 }
 
